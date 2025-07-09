@@ -1,22 +1,22 @@
-# TODO — bike-route-map
+# TODO: bike-route-map
 
 ---
 
 ## Part 1 — Frontend: Map MVP
 
 - [ ] 1. Initialize project
-  - [ ] 1.1 Create Vite + React + TypeScript app
-  - [ ] 1.2 Set up folder structure
+  - [ ] 1.1 Create Vite + React + TypeScript app [#1](https://github.com/VoxelPrincess/bike-route-map/issues/1)
+  - [ ] 1.2 Set up folder structure [#2](https://github.com/VoxelPrincess/bike-route-map/issues/2)
 
 - [ ] 2. Display base map
-  - [ ] 2.1 Install Leaflet and configure tiles
-  - [ ] 2.2 Center map on Helsinki
-  - [ ] 2.3 Style base map container
+  - [ ] 2.1 Install Leaflet and configure tiles [#3](https://github.com/VoxelPrincess/bike-route-map/issues/3)
+  - [ ] 2.2 Center map on Helsinki [#4](https://github.com/VoxelPrincess/bike-route-map/issues/4)
+  - [ ] 2.3 Style base map container [#5](https://github.com/VoxelPrincess/bike-route-map/issues/5)
 
-- [ ] 3. Load and display surface data
-  - [ ] 3.1 Add test GeoJSON to public folder
-  - [ ] 3.2 Load GeoJSON using fetch
-  - [ ] 3.3 Render GeoJSON layer on map
+- [ ] 3. Load and display surface data 
+  - [ ] 3.1 Add test GeoJSON to public folder [#6](https://github.com/VoxelPrincess/bike-route-map/issues/6)
+  - [ ] 3.2 Load GeoJSON using fetch [#7](https://github.com/VoxelPrincess/bike-route-map/issues/7)
+  - [ ] 3.3 Render GeoJSON layer on map [#8](https://github.com/VoxelPrincess/bike-route-map/issues/8)
 
 - [ ] 4. Surface filter UI
   - [ ] 4.1 Create checkbox UI
@@ -58,5 +58,13 @@
   - [ ] 10.1 Create FastAPI project scaffold
   - [ ] 10.2 Define endpoints for feedback
   - [ ] 10.3 Plan database schema
+
+---
+
+## Project Tracker
+
+For full task progress and status, see the  
+[GitHub Project Board](https://github.com/users/VoxelPrincess/projects/3/views/1)
+
 
   [← Back to README](README.md)

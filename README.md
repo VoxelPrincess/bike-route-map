@@ -65,3 +65,11 @@ npm run dev
 > View or edit diagram: [https://is.gd/1QElLX](https://is.gd/1QElLX)
 
 ![Solution Architecture](docs/TechStack.png) 
+
+---
+
+## 8. Project Tracker
+
+For full task progress and status, see the  
+[📋 GitHub Project Board](https://github.com/users/VoxelPrincess/projects/3/views/1)
+
