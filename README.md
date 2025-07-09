@@ -1,67 +1,69 @@
-# bike-route-map
+# React + TypeScript + Vite
 
-A web application that helps cyclists find safer and more comfortable bike routes,  
-with surface type visualization and smart routing using open data.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
----
+Currently, two official plugins are available:
 
-## 1. Features
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-- Surface type map (asphalt, gravel, cobblestone, etc.)
-- Route planning between A → B (via Digitransit API)
-- Route surface type breakdown (percentages)
-- (Optional) User feedback for segments
+## Expanding the ESLint configuration
 
----
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 2. Tech Stack
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-- **Frontend:** React + Leaflet + Vite
-- **Backend:** FastAPI (Python)
-- **Database:** PostgreSQL + PostGIS
-- **Deployment:** Docker + Azure Containers
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
 
----
-
-## 3. How to Run
-
-```bash
-npm install
-npm run dev
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
----
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## 4. Folder Structure
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-/src     → React components, map logic  
-/public  → Static files (GeoJSON, favicon)  
-/docs    → Diagrams, MVP, problem domain  
-```
-
----
-
-## 5. Docs
-
-- [Problem Domain](docs/problem_domain.md)
-- [Problem Domain Diagram](docs/ProblemDomain.png)
-- [Solution Domain](docs/solution_domain.md)
-- [MVP Description](docs/mvp.md) 
-- [Solution Architecture](docs/TechStack.png)
-- [Task List / TODO](TODO.md)
-
----
-
-## 6. Problem Domain Diagram
-
-> View or edit diagram: [https://is.gd/aFSsrB](https://is.gd/aFSsrB)
-
-![Problem Domain Diagram](docs/ProblemDomain.png)
-
-
-## 7. Solution Domain Overview
-
-> View or edit diagram: [https://is.gd/1QElLX](https://is.gd/1QElLX)
-
-![Solution Architecture](docs/TechStack.png) 
