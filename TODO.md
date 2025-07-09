@@ -1,0 +1,62 @@
+# TODO — bike-route-map
+
+---
+
+## Part 1 — Frontend: Map MVP
+
+- [ ] 1. Initialize project
+  - [ ] 1.1 Create Vite + React + TypeScript app
+  - [ ] 1.2 Set up folder structure
+
+- [ ] 2. Display base map
+  - [ ] 2.1 Install Leaflet and configure tiles
+  - [ ] 2.2 Center map on Helsinki
+  - [ ] 2.3 Style base map container
+
+- [ ] 3. Load and display surface data
+  - [ ] 3.1 Add test GeoJSON to public folder
+  - [ ] 3.2 Load GeoJSON using fetch
+  - [ ] 3.3 Render GeoJSON layer on map
+
+- [ ] 4. Surface filter UI
+  - [ ] 4.1 Create checkbox UI
+  - [ ] 4.2 Add support for 6+ surface types
+  - [ ] 4.3 Filter features by checkbox state
+
+- [ ] 5. Surface segment styling
+  - [ ] 5.1 Add color mapping by surface
+  - [ ] 5.2 Apply styles to each feature
+  - [ ] 5.3 Add hover popup with surface type
+
+---
+
+## Part 2 — Routing & API Integration
+
+- [ ] 6. A→B route planning
+  - [ ] 6.1 Implement address search field
+  - [ ] 6.2 Query Digitransit API for route
+  - [ ] 6.3 Render returned route on map
+
+- [ ] 7. Styled route overlay
+  - [ ] 7.1 Match returned segments to surface types
+  - [ ] 7.2 Color route based on surface data
+
+---
+
+## Part 3 — Stats & Backend Planning
+
+- [ ] 8. Surface analytics
+  - [ ] 8.1 Calculate surface type percentages
+  - [ ] 8.2 Show chart or legend with breakdown
+
+- [ ] 9. Feedback feature
+  - [ ] 9.1 Add feedback marker UI
+  - [ ] 9.2 Plan data format for feedback
+
+- [ ] 10. Backend API draft  
+      _(see [api_plan.md](docs/api_plan.md) for details)_
+  - [ ] 10.1 Create FastAPI project scaffold
+  - [ ] 10.2 Define endpoints for feedback
+  - [ ] 10.3 Plan database schema
+
+  [← Back to README](README.md)
