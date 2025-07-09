@@ -19,6 +19,7 @@ with surface type visualization and smart routing using open data.
 - **Frontend:** React + Leaflet + Vite
 - **Backend:** FastAPI (Python)
 - **Database:** PostgreSQL + PostGIS
+- **GIS:** Location and surface data handled with GeoJSON and PostGIS
 - **Deployment:** Docker + Azure Containers
 
 ---
@@ -62,7 +63,7 @@ npm run dev
 
 ## 7. Solution Domain Overview
 
-> View or edit diagram: [https://is.gd/1QElLX](https://is.gd/1QElLX)
+> View or edit diagram: [https://is.gd/oo5vFi](https://is.gd/oo5vFi)
 
 ![Solution Architecture](docs/TechStack.png) 
 
@@ -71,5 +72,5 @@ npm run dev
 ## 8. Project Tracker
 
 For full task progress and status, see the  
-[📋 GitHub Project Board](https://github.com/users/VoxelPrincess/projects/3/views/1)
+[GitHub Project Board](https://github.com/users/VoxelPrincess/projects/3/views/1)
 

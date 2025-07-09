@@ -26,4 +26,10 @@
 - External routing: Digitransit GraphQL
 - (Optional) Internal API: FastAPI + PostgreSQL/PostGIS
 
+## 5. Storage Notes
+
+- Surface segments and routing data are stored as GeoJSON in a PostGIS-enabled PostgreSQL database.
+- Spatial queries (e.g. intersection, buffer, filtering by area) are planned for future analysis.
+
+
 [← Back to README](../README.md)

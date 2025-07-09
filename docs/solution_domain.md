@@ -31,13 +31,13 @@ The application helps users make more informed decisions when selecting cycling 
 
 ## 3. Architecture Snapshot
 
-Architecture diagram: https://is.gd/1QElLX
+Architecture diagram: https://is.gd/oo5vFi
 
 ![Solution Architecture](TechStack.png)
 
 - Frontend: React, Vite, Leaflet (TypeScript)
 - Backend: FastAPI (planned)
-- Database: PostgreSQL + PostGIS (future data storage)
+- Database: PostgreSQL + PostGIS (planned spatial storage for surface and route data)
 - APIs: Digitransit, OpenStreetMap, HRI GeoJSON
 - Deployment: Dockerized containers, Azure-hosted (planned)
 
