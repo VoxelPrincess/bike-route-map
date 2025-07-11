@@ -1,8 +1,7 @@
-пше import React from 'react';
+import React from 'react';
 
 const Map = () => {
-  console.log("Map component loaded"); // NOTE: temporary log for testing
-
+  console.log("Map component loaded");
   return (
     <div style={{ height: '400px', backgroundColor: '#eee' }}>
       Map placeholder
