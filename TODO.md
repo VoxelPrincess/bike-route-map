@@ -59,6 +59,20 @@
   - [ ] 10.2 Define endpoints for feedback
   - [ ] 10.3 Plan database schema
 
+- [ ] 11. Early Azure Deployment
+  - [ ] 11.1 Deploy current frontend to Azure Static Web Apps
+  - [ ] 11.2 Enable GitHub Actions for CI/CD
+  - [ ] 11.3 Get temporary Azure subdomain
+  - [ ] 11.4 Test updates via `git push`
+  - [ ] 11.5 Connect custom domain via Hostinger DNS
+
+## Part 4 — Backend Deployment & Dockerization
+
+- [ ] 12. Containerize FastAPI backend with Docker
+- [ ] 13. Add PostgreSQL service via docker-compose
+- [ ] 14. Deploy backend to Azure (Container Apps or App Service)
+- [ ] 15. Connect frontend to deployed backend
+
 ---
 
 ## Project Tracker
