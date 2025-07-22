@@ -1,0 +1,90 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "surface": "asphalt",
+        "name": "Mannerheimintie segment",
+        "highway": "primary"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [24.9384, 60.1699],
+          [24.9394, 60.1709],
+          [24.9404, 60.1719],
+          [24.9414, 60.1729]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "surface": "gravel",
+        "name": "Park path near Esplanadi",
+        "highway": "path"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [24.9420, 60.1680],
+          [24.9430, 60.1685],
+          [24.9440, 60.1690],
+          [24.9450, 60.1695]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "surface": "cobblestone",
+        "name": "Old town street",
+        "highway": "residential"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [24.9360, 60.1720],
+          [24.9370, 60.1725],
+          [24.9380, 60.1730]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "surface": "asphalt",
+        "name": "Bike lane on Aleksanterinkatu",
+        "highway": "cycleway"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [24.9500, 60.1700],
+          [24.9510, 60.1705],
+          [24.9520, 60.1710],
+          [24.9530, 60.1715],
+          [24.9540, 60.1720]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "surface": "gravel",
+        "name": "Forest trail near Suomenlinna",
+        "highway": "track"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [24.9800, 60.1450],
+          [24.9810, 60.1460],
+          [24.9820, 60.1470],
+          [24.9830, 60.1480]
+        ]
+      }
+    }
+  ]
+}

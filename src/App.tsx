@@ -2,11 +2,8 @@ import React from 'react';
 import Map from './components/Map';
 
 function App() {
-  console.log("App loaded");
-  
   return (
     <div>
-      <h1>bike-route-map</h1>
       <Map />
     </div>
   );
