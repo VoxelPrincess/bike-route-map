@@ -33,13 +33,14 @@
 ## Part 2 — Routing & API Integration
 
 - [ ] 6. A→B route planning
-  - [ ] 6.1 Implement address search field
-  - [ ] 6.2 Query Digitransit API for route
-  - [ ] 6.3 Render returned route on map
+  - [ ] 6.1 Use fixed A/B coordinates for testing
+  - [ ] 6.2 Query OpenRouteService API (cycling-regular, GeoJSON)
+  - [ ] 6.3 Render returned route as GeoJSON layer
+  - [ ] 6.4* Add A and B markers on map
 
 - [ ] 7. Styled route overlay
-  - [ ] 7.1 Match returned segments to surface types
-  - [ ] 7.2 Color route based on surface data
+  - [ ] 7.1 Style route line (color, opacity, weight)
+  - [ ] 7.2* Color route segments by surface type (if available)
 
 ---
 
@@ -65,6 +66,9 @@
   - [ ] 11.3 Get temporary Azure subdomain
   - [ ] 11.4 Test updates via `git push`
   - [ ] 11.5 Connect custom domain via Hostinger DNS
+  - [ ] 11.6* Deploy OpenLayers version (optional, subpath `/ol`)
+
+---
 
 ## Part 4 — Backend Deployment & Dockerization
 
@@ -72,6 +76,21 @@
 - [ ] 13. Add PostgreSQL service via docker-compose
 - [ ] 14. Deploy backend to Azure (Container Apps or App Service)
 - [ ] 15. Connect frontend to deployed backend
+
+---
+
+## Part X — Optional: OpenLayers Migration (Post-MVP)
+
+> This section is reserved for a potential future migration to OpenLayers, if required for more advanced geospatial features or projection support.
+
+- [ ] X.1 Create new Vite project under `openlayers-version/` folder
+- [ ] X.2 Rebuild base map using `ol.Map` and `ol.layer.Tile`
+- [ ] X.3 Load surface GeoJSON using `ol.source.Vector` + `ol.format.GeoJSON`
+- [ ] X.4 Implement feature styling using `ol.style.Style` and `ol.style.Stroke`
+- [ ] X.5 Rebuild surface filtering UI (manual or custom React logic)
+- [ ] X.6 Query ORS API and render route as vector layer
+- [ ] X.7 Evaluate pros/cons of OL vs Leaflet for current use case
+- [ ] X.8 Write internal comparison summary (optional)
 
 ---
 
