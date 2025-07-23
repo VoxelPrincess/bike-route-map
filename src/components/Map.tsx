@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
 import { useEffect, useState } from "react";
 import { fetchBikeRoute, testCoordinates } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
@@ -46,6 +46,8 @@ const Map = () => {
     return surfaceStyles[surfaceType as keyof typeof surfaceStyles] || { color: '#FF0000', weight: 4 };
   };
 
+
+  // ...existing code...
   return (
     <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
       <TileLayer
