@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { useEffect, useState } from "react";
+import { fetchBikeRoute, testCoordinates } from "../api/orsApi";
 
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
@@ -17,6 +18,17 @@ const Map = () => {
       })
       .catch(error => {
         console.error('Failed to load geojson:', error);
+      });
+
+    // Test ORS API
+    fetchBikeRoute(testCoordinates.startPoint, testCoordinates.endPoint)
+      .then(routeData => {
+        console.log('ORS API test successful!');
+        console.log('Route features:', routeData.features?.length);
+        console.log('Route geometry type:', routeData.features?.[0]?.geometry?.type);
+      })
+      .catch(error => {
+        console.error('ORS API test failed:', error);
       });
   }, []);
 
