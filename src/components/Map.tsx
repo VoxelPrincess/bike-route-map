@@ -1,11 +1,13 @@
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { useEffect, useState } from "react";
 import { fetchBikeRoute, testCoordinates } from "../api/orsApi";
+import RouteLayer from "./RouteLayer";
 
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
 const Map = () => {
   const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  const [routeData, setRouteData] = useState<any>(null);
 
   useEffect(() => {
     // Load surface data from test file
@@ -23,6 +25,7 @@ const Map = () => {
     // Test ORS API
     fetchBikeRoute(testCoordinates.startPoint, testCoordinates.endPoint)
       .then(routeData => {
+        setRouteData(routeData);
         console.log('ORS API test successful!');
         console.log('Route features:', routeData.features?.length);
         console.log('Route geometry type:', routeData.features?.[0]?.geometry?.type);
@@ -57,6 +60,9 @@ const Map = () => {
             layer.bindPopup(feature.properties.surface);
           }}
         />
+      )}
+      {routeData && (
+        <RouteLayer routeData={routeData} />
       )}
     </MapContainer>
   );
