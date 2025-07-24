@@ -18,9 +18,10 @@ function RouteLayer({ routeData }: { routeData: any }) {
     if (!routeData) return null;
 
     const routeStyle = {
-        color: "#1976d2",
-        weight: 4,
-        opacity: 0.7
+        color: "#6f42c1", // my color for the route line
+        weight: 6,
+        opacity: 0.8,
+        dashArray: "12 10"
     };
 
     // Try to extract start/end coordinates from routeData
