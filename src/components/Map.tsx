@@ -1,37 +1,38 @@
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from "react-leaflet";
-import { useEffect, useState } from "react";
-import { fetchBikeRoute, testCoordinates } from "../api/orsApi";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip } from "react-leaflet";
+import React, { useEffect, useState } from "react";
+import { fetchBikeRoute } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
+import MapClickHandler from "./MapClickHandler";
 
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
 const Map = () => {
   const [geoJsonData, setGeoJsonData] = useState<any>(null);
+
+  // Add state for route points
+  const [from, setFrom] = useState<[number, number] | null>(null);
+  const [to, setTo] = useState<[number, number] | null>(null);
   const [routeData, setRouteData] = useState<any>(null);
 
+  // Fetch route when both points are selected
   useEffect(() => {
-    // Load surface data from test file
+    if (from && to) {
+      fetchBikeRoute(from, to)
+        .then(routeData => setRouteData(routeData))
+        .catch(error => {
+          setRouteData(null);
+          console.error('[route-fetch] Failed to fetch route A-B:', error);
+        });
+    }
+  }, [from, to]);
+
+  // Load surface data from test file
+  useEffect(() => {
     fetch('/test.geojson')
       .then(response => response.json())
-      .then(data => {
-        console.log('Loaded GeoJSON features:', data.features.length);
-        console.log('Surface types found:', data.features.map((f: any) => f.properties.surface));
-        setGeoJsonData(data);
-      })
+      .then(data => setGeoJsonData(data))
       .catch(error => {
-        console.error('Failed to load geojson:', error);
-      });
-
-    // Test ORS API
-    fetchBikeRoute(testCoordinates.startPoint, testCoordinates.endPoint)
-      .then(routeData => {
-        setRouteData(routeData);
-        console.log('ORS API test successful!');
-        console.log('Route features:', routeData.features?.length);
-        console.log('Route geometry type:', routeData.features?.[0]?.geometry?.type);
-      })
-      .catch(error => {
-        console.error('ORS API test failed:', error);
+        console.error('[geojson-load] Failed to load GeoJSON data:', error);
       });
   }, []);
 
@@ -47,26 +48,53 @@ const Map = () => {
   };
 
 
-  // ...existing code...
+  // Guidance message
+  let statusMsg = "Click to select point A";
+  if (from && !to) statusMsg = "Click to select point B";
+  else if (from && to) statusMsg = "Route is shown. Reset to select new points.";
+
   return (
-    <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
-      <TileLayer
-        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {geoJsonData && (
-        <GeoJSON 
-          data={geoJsonData} 
-          style={getFeatureStyle}
-          onEachFeature={(feature, layer) => {
-            layer.bindPopup(feature.properties.surface);
-          }}
+    <>
+      <div style={{ position: "absolute", top: 30, left: 100, zIndex: 1000 }}>
+        <button 
+          onClick={() => { setFrom(null); setTo(null); setRouteData(null); }} 
+          style={{ marginRight: 12, fontWeight: "bold", fontSize: "1rem", padding: "6px 16px" }}
+        >
+          Reset route
+        </button>
+        <span style={{ fontWeight: "bold", fontSize: "1rem" }}>{statusMsg}</span>
+      </div>
+      <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
+        <TileLayer
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-      )}
-      {routeData && (
-        <RouteLayer routeData={routeData} />
-      )}
-    </MapContainer>
+        <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
+        {/* Show A/B markers before route is fetched */}
+        {from && (
+          <Marker position={[from[1], from[0]]}>
+            <Tooltip direction="top" offset={[0, -10]} permanent>Start A</Tooltip>
+          </Marker>
+        )}
+        {to && (
+          <Marker position={[to[1], to[0]]}>
+            <Tooltip direction="top" offset={[0, -10]} permanent>End B</Tooltip>
+          </Marker>
+        )}
+        {geoJsonData && (
+          <GeoJSON 
+            data={geoJsonData} 
+            style={getFeatureStyle}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(feature.properties.surface);
+            }}
+          />
+        )}
+        {routeData && (
+          <RouteLayer routeData={routeData} />
+        )}
+      </MapContainer>
+    </>
   );
 };
 
