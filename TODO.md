@@ -37,6 +37,7 @@
   - [ ] 6.2 Query OpenRouteService API (cycling-regular, GeoJSON) [#16](https://github.com/VoxelPrincess/bike-route-map/issues/16)
   - [ ] 6.3 Render returned route as GeoJSON layer [#17](https://github.com/VoxelPrincess/bike-route-map/issues/17)
   - [ ] 6.4 Add A and B markers on map [#44](https://github.com/VoxelPrincess/bike-route-map/issues/44)
+  - [ ] 6.5 Enable User to Select A and B Points via Map Click [#48](https://github.com/VoxelPrincess/bike-route-map/issues/48)
 
 - [ ] 7. Styled route overlay
   - [ ] 7.1 Style route line (color, opacity, weight) [#18](https://github.com/VoxelPrincess/bike-route-map/issues/18)
