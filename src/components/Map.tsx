@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip } from "react-leaflet";
 import React, { useEffect, useState } from "react";
 import { fetchBikeRoute } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
@@ -48,26 +48,50 @@ const Map = () => {
   };
 
 
+  // Guidance message
+  let statusMsg = "Click to select point A";
+  if (from && !to) statusMsg = "Click to select point B";
+  else if (from && to) statusMsg = "Route is shown. Reset to select new points.";
+
   return (
-    <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
-      <TileLayer
-        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
-      {geoJsonData && (
-        <GeoJSON 
-          data={geoJsonData} 
-          style={getFeatureStyle}
-          onEachFeature={(feature, layer) => {
-            layer.bindPopup(feature.properties.surface);
-          }}
+    <>
+      <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}>
+        <button onClick={() => { setFrom(null); setTo(null); setRouteData(null); }} style={{ marginRight: 12 }}>
+          Reset route
+        </button>
+        <span>{statusMsg}</span>
+      </div>
+      <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
+        <TileLayer
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-      )}
-      {routeData && (
-        <RouteLayer routeData={routeData} />
-      )}
-    </MapContainer>
+        <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
+        {/* Show A/B markers before route is fetched */}
+        {from && (
+          <Marker position={[from[1], from[0]]}>
+            <Tooltip direction="top" offset={[0, -10]} permanent>Start A</Tooltip>
+          </Marker>
+        )}
+        {to && (
+          <Marker position={[to[1], to[0]]}>
+            <Tooltip direction="top" offset={[0, -10]} permanent>End B</Tooltip>
+          </Marker>
+        )}
+        {geoJsonData && (
+          <GeoJSON 
+            data={geoJsonData} 
+            style={getFeatureStyle}
+            onEachFeature={(feature, layer) => {
+              layer.bindPopup(feature.properties.surface);
+            }}
+          />
+        )}
+        {routeData && (
+          <RouteLayer routeData={routeData} />
+        )}
+      </MapContainer>
+    </>
   );
 };
 
