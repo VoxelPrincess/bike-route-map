@@ -55,11 +55,14 @@ const Map = () => {
 
   return (
     <>
-      <div style={{ position: "absolute", top: 10, left: 10, zIndex: 1000 }}>
-        <button onClick={() => { setFrom(null); setTo(null); setRouteData(null); }} style={{ marginRight: 12 }}>
+      <div style={{ position: "absolute", top: 30, left: 100, zIndex: 1000 }}>
+        <button 
+          onClick={() => { setFrom(null); setTo(null); setRouteData(null); }} 
+          style={{ marginRight: 12, fontWeight: "bold", fontSize: "1rem", padding: "6px 16px" }}
+        >
           Reset route
         </button>
-        <span>{statusMsg}</span>
+        <span style={{ fontWeight: "bold", fontSize: "1rem" }}>{statusMsg}</span>
       </div>
       <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
         <TileLayer
