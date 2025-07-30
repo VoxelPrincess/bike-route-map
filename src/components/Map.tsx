@@ -73,12 +73,12 @@ const Map = () => {
         {/* Show A/B markers before route is fetched */}
         {from && (
           <Marker position={[from[1], from[0]]}>
-            <Tooltip direction="top" offset={[0, -10]} permanent>Start A</Tooltip>
+            <Tooltip direction="top" offset={[0, -10]} permanent>Start: A</Tooltip>
           </Marker>
         )}
         {to && (
           <Marker position={[to[1], to[0]]}>
-            <Tooltip direction="top" offset={[0, -10]} permanent>End B</Tooltip>
+            <Tooltip direction="top" offset={[0, -10]} permanent>End: B</Tooltip>
           </Marker>
         )}
         {geoJsonData && (
