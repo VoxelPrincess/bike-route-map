@@ -48,8 +48,18 @@
 ## Part 3 — Stats & Backend Planning
 
 - [ ] 8. Surface analytics
-  - [ ] 8.1 Calculate surface type percentages [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
-  - [ ] 8.2 Show chart or legend with breakdown [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
+  - [ ] 8.1 Surface Type API: Backend Processing for Route [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
+        Create FastAPI endpoint that receives a LineString and returns surface type percentages using Overpass API (with spatial matching).
+
+  - [ ] 8.2 Connect API to frontend: call POST /analyze-surface [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
+        Send selected route as LineString from frontend and receive breakdown data.
+
+  - [ ] 8.3 Show surface breakdown UI (chart or legend) [#52](https://github.com/VoxelPrincess/bike-route-map/issues/49)
+        Display results visually (bar chart or list with % values).
+
+  - [ ] 8.4 Local fallback: analyze surface from static GeoJSON [#53](https://github.com/VoxelPrincess/bike-route-map/issues/50)
+        Optional dev mode: load local surface data and show breakdown (no Overpass).
+
 
 - [ ] 9. Feedback feature
   - [ ] 9.1 Add feedback marker UI [#22](https://github.com/VoxelPrincess/bike-route-map/issues/22)
