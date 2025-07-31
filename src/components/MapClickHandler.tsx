@@ -15,5 +15,5 @@ export default function MapClickHandler({ from, to, setFrom, setTo }: {
         }
     });
 
-    return null; // This component does not render anything
+    return null; 
 }
