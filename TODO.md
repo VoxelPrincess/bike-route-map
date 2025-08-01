@@ -4,19 +4,19 @@
 
 ## Part 1 — Frontend: Map MVP
 
-- [ ] 1. Initialize project
-  - [ ] 1.1 Create Vite + React + TypeScript app [#1](https://github.com/VoxelPrincess/bike-route-map/issues/1)
-  - [ ] 1.2 Set up folder structure [#2](https://github.com/VoxelPrincess/bike-route-map/issues/2)
+- [X] 1. Initialize project
+  - [X] 1.1 Create Vite + React + TypeScript app [#1](https://github.com/VoxelPrincess/bike-route-map/issues/1)
+  - [X] 1.2 Set up folder structure [#2](https://github.com/VoxelPrincess/bike-route-map/issues/2)
 
-- [ ] 2. Display base map
-  - [ ] 2.1 Install Leaflet and configure tiles [#3](https://github.com/VoxelPrincess/bike-route-map/issues/3)
-  - [ ] 2.2 Center map on Helsinki [#4](https://github.com/VoxelPrincess/bike-route-map/issues/4)
-  - [ ] 2.3 Style base map container [#5](https://github.com/VoxelPrincess/bike-route-map/issues/5)
+- [X] 2. Display base map
+  - [X] 2.1 Install Leaflet and configure tiles [#3](https://github.com/VoxelPrincess/bike-route-map/issues/3)
+  - [X] 2.2 Center map on Helsinki [#4](https://github.com/VoxelPrincess/bike-route-map/issues/4)
+  - [X] 2.3 Style base map container [#5](https://github.com/VoxelPrincess/bike-route-map/issues/5)
 
-- [ ] 3. Load and display surface data 
-  - [ ] 3.1 Add test GeoJSON to public folder [#6](https://github.com/VoxelPrincess/bike-route-map/issues/6)
-  - [ ] 3.2 Load GeoJSON using fetch [#7](https://github.com/VoxelPrincess/bike-route-map/issues/7)
-  - [ ] 3.3 Render GeoJSON layer on map [#8](https://github.com/VoxelPrincess/bike-route-map/issues/8)
+- [X] 3. Load and display surface data 
+  - [X] 3.1 Add test GeoJSON to public folder [#6](https://github.com/VoxelPrincess/bike-route-map/issues/6)
+  - [X] 3.2 Load GeoJSON using fetch [#7](https://github.com/VoxelPrincess/bike-route-map/issues/7)
+  - [X] 3.3 Render GeoJSON layer on map [#8](https://github.com/VoxelPrincess/bike-route-map/issues/8)
 
 - [ ] 4. Surface filter UI
   - [ ] 4.1 Create checkbox UI [#9](https://github.com/VoxelPrincess/bike-route-map/issues/9)
@@ -32,15 +32,15 @@
 
 ## Part 2 — Routing & API Integration
 
-- [ ] 6. A→B route planning
-  - [ ] 6.1 Use fixed A/B coordinates for testing [#15](https://github.com/VoxelPrincess/bike-route-map/issues/15)
-  - [ ] 6.2 Query OpenRouteService API (cycling-regular, GeoJSON) [#16](https://github.com/VoxelPrincess/bike-route-map/issues/16)
-  - [ ] 6.3 Render returned route as GeoJSON layer [#17](https://github.com/VoxelPrincess/bike-route-map/issues/17)
-  - [ ] 6.4 Add A and B markers on map [#44](https://github.com/VoxelPrincess/bike-route-map/issues/44)
-  - [ ] 6.5 Enable User to Select A and B Points via Map Click [#48](https://github.com/VoxelPrincess/bike-route-map/issues/48)
+- [X] 6. A→B route planning
+  - [X] 6.1 Use fixed A/B coordinates for testing [#15](https://github.com/VoxelPrincess/bike-route-map/issues/15)
+  - [X] 6.2 Query OpenRouteService API (cycling-regular, GeoJSON) [#16](https://github.com/VoxelPrincess/bike-route-map/issues/16)
+  - [X] 6.3 Render returned route as GeoJSON layer [#17](https://github.com/VoxelPrincess/bike-route-map/issues/17)
+  - [X] 6.4 Add A and B markers on map [#44](https://github.com/VoxelPrincess/bike-route-map/issues/44)
+  - [X] 6.5 Enable User to Select A and B Points via Map Click [#48](https://github.com/VoxelPrincess/bike-route-map/issues/48)
 
 - [ ] 7. Styled route overlay
-  - [ ] 7.1 Style route line (color, opacity, weight) [#18](https://github.com/VoxelPrincess/bike-route-map/issues/18)
+  - [X] 7.1 Style route line (color, opacity, weight) [#18](https://github.com/VoxelPrincess/bike-route-map/issues/18)
   - [ ] 7.2* Color route segments by surface type (if available) [#19](https://github.com/VoxelPrincess/bike-route-map/issues/19)
 
 ---
@@ -48,8 +48,20 @@
 ## Part 3 — Stats & Backend Planning
 
 - [ ] 8. Surface analytics
-  - [ ] 8.1 Calculate surface type percentages [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
-  - [ ] 8.2 Show chart or legend with breakdown [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
+  - [ ] 8.1 Surface Type API: Backend Processing for Route [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
+        Create FastAPI endpoint that receives a LineString and returns surface type percentages using Overpass API (with spatial matching).
+
+  - [ ] 8.2 Connect API to frontend: call POST /analyze-surface [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
+        Send selected route as LineString from frontend and receive breakdown data.
+
+  - [ ] 8.3 Show surface breakdown UI (chart or legend) [#52](https://github.com/VoxelPrincess/bike-route-map/issues/49)
+        Display results visually (bar chart or list with % values).
+
+  - [ ] 8.4 Local fallback: analyze surface from static GeoJSON [#53](https://github.com/VoxelPrincess/bike-route-map/issues/50)
+        Optional dev mode: load local surface data and show breakdown (no Overpass).
+
+  - [ ] 8.5 Accurate Surface Breakdown by Route Geometry [#54](https://github.com/VoxelPrincess/bike-route-map/issues/54)
+        Use shapely intersection to calculate exact surface percentages along the route using surface-tagged ways from Overpass API.
 
 - [ ] 9. Feedback feature
   - [ ] 9.1 Add feedback marker UI [#22](https://github.com/VoxelPrincess/bike-route-map/issues/22)
