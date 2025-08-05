@@ -31,3 +31,10 @@ docs/code_style_notes.md
 .env.*.local
 *.local
 
+# Python venv
+venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+backend/__pycache__/
