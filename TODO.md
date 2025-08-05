@@ -48,7 +48,7 @@
 ## Part 3 — Stats & Backend Planning
 
 - [ ] 8. Surface analytics
-  - [ ] 8.1 Surface Type API: Backend Processing for Route [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
+  - [X] 8.1 Surface Type API: Backend Processing for Route [#20](https://github.com/VoxelPrincess/bike-route-map/issues/20)
         Create FastAPI endpoint that receives a LineString and returns surface type percentages using Overpass API (with spatial matching).
 
   - [ ] 8.2 Connect API to frontend: call POST /analyze-surface [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
@@ -62,6 +62,8 @@
 
   - [ ] 8.5 Accurate Surface Breakdown by Route Geometry [#54](https://github.com/VoxelPrincess/bike-route-map/issues/54)
         Use shapely intersection to calculate exact surface percentages along the route using surface-tagged ways from Overpass API.
+
+  - [ ] 8.6 Improve /analyze-surface: caching + error handling [#55](https://github.com/VoxelPrincess/bike-route-map/issues/55)
 
 - [ ] 9. Feedback feature
   - [ ] 9.1 Add feedback marker UI [#22](https://github.com/VoxelPrincess/bike-route-map/issues/22)

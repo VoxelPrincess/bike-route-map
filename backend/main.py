@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
-from query_overpass_surface import query_overpass_surface
+from .query_overpass_surface import query_overpass_surface
 
 app = FastAPI()
 

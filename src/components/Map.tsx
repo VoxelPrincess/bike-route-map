@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { fetchBikeRoute } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
 import MapClickHandler from "./MapClickHandler";
+import { fetchSurfaceBreakdown } from "../api/surfaceApi";
 
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
@@ -35,6 +36,15 @@ const Map = () => {
         console.error('[geojson-load] Failed to load GeoJSON data:', error);
       });
   }, []);
+
+  // Define styles for different surface types
+  useEffect(() => {
+    if (routeData?.features?.[0]?.geometry) {
+      fetchSurfaceBreakdown(routeData.features[0].geometry)
+        .then(data => console.log('[surface-breakdown]', data))
+        .catch(err => console.error('[surface-breakdown] Error:', err));
+    }
+  }, [routeData]);
 
   const surfaceStyles = {
     asphalt: { color: '#333333', weight: 4 },
