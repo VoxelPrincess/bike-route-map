@@ -18,9 +18,9 @@ export async function fetchBikeRoute(start: [number, number], end: [number, numb
   };
 
   try {
-    console.log('Fetching route from ORS API...');
-    console.log('Start:', start, 'End:', end);
-    
+    console.log('[route-fetch] Sending request to ORS...');
+    console.log(`[route-fetch] Start: ${start.join(', ')} | End: ${end.join(', ')}`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -36,11 +36,11 @@ export async function fetchBikeRoute(start: [number, number], end: [number, numb
     }
 
     const routeData = await response.json();
-    console.log('Route fetched successfully:', routeData);
-    
+    console.log('[route-fetch] Segments:', routeData.features?.length);
+
     return routeData;
   } catch (error) {
-    console.error('Failed to fetch route:', error);
+    console.error('[route-fetch] Failed to fetch route A→B:', error);
     throw error;
   }
 }
