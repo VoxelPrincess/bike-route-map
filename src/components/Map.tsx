@@ -3,49 +3,75 @@ import React, { useEffect, useState } from "react";
 import { fetchBikeRoute } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
 import MapClickHandler from "./MapClickHandler";
+import { fetchSurfaceBreakdown } from "../api/surfaceApi";
+import { SurfaceBarTextChart } from "./analytics/SurfaceBarChart";
 
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
 const Map = () => {
-  const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  // const [geoJsonData, setGeoJsonData] = useState<any>(null);
 
   // Add state for route points
   const [from, setFrom] = useState<[number, number] | null>(null);
   const [to, setTo] = useState<[number, number] | null>(null);
   const [routeData, setRouteData] = useState<any>(null);
+  const [surfaceBreakdown, setSurfaceBreakdown] = useState<Record<string, number> | null>(null);
+  const [routeSummary, setRouteSummary] = useState<{ distance: number; duration: number } | null>(null);
 
   // Fetch route when both points are selected
   useEffect(() => {
     if (from && to) {
       fetchBikeRoute(from, to)
-        .then(routeData => setRouteData(routeData))
+        .then(routeData => {
+          setRouteData(routeData);
+          // Extract the time and length of the route
+          const summary = routeData?.features?.[0]?.properties?.summary;
+          if (summary && typeof summary.distance === 'number' && typeof summary.duration === 'number') {
+            setRouteSummary({ distance: summary.distance, duration: summary.duration });
+          } else {
+            setRouteSummary(null);
+          }
+        })
         .catch(error => {
           setRouteData(null);
+          setRouteSummary(null);
           console.error('[route-fetch] Failed to fetch route A-B:', error);
         });
     }
   }, [from, to]);
 
   // Load surface data from test file
+  // useEffect(() => {
+  //   fetch('/test.geojson')
+  //     .then(response => response.json())
+  //     .then(data => setGeoJsonData(data))
+  //     .catch(error => {
+  //       console.error('[geojson-load] Failed to load GeoJSON data:', error);
+  //     });
+  // }, []);
+
+  // Define styles for different surface types
   useEffect(() => {
-    fetch('/test.geojson')
-      .then(response => response.json())
-      .then(data => setGeoJsonData(data))
-      .catch(error => {
-        console.error('[geojson-load] Failed to load GeoJSON data:', error);
-      });
-  }, []);
+    if (routeData?.features?.[0]?.geometry) {
+      fetchSurfaceBreakdown(routeData.features[0].geometry)
+        .then(data => setSurfaceBreakdown(data))
+        .catch(err => {
+          setSurfaceBreakdown(null);
+          console.error('[surface-breakdown] Error:', err);
+        });
+    }
+  }, [routeData]);
 
-  const surfaceStyles = {
-    asphalt: { color: '#333333', weight: 4 },
-    gravel: { color: '#8B4513', weight: 4 },
-    cobblestone: { color: '#708090', weight: 4 }
-  };
+  // const surfaceStyles = {
+  //   asphalt: { color: '#333333', weight: 4 },
+  //   gravel: { color: '#8B4513', weight: 4 },
+  //   cobblestone: { color: '#708090', weight: 4 }
+  // };
 
-  const getFeatureStyle = (feature: any) => {
-    const surfaceType = feature.properties.surface;
-    return surfaceStyles[surfaceType as keyof typeof surfaceStyles] || { color: '#FF0000', weight: 4 };
-  };
+  // const getFeatureStyle = (feature: any) => {
+  //   const surfaceType = feature.properties.surface;
+  //   return surfaceStyles[surfaceType as keyof typeof surfaceStyles] || { color: '#FF0000', weight: 4 };
+  // };
 
 
   // Guidance message
@@ -53,17 +79,47 @@ const Map = () => {
   if (from && !to) statusMsg = "Click to select point B";
   else if (from && to) statusMsg = "Route is shown. Reset to select new points.";
 
+  // Reset handler
+  const handleResetClick = () => {
+    setFrom(null);
+    setTo(null);
+    setRouteData(null);
+    setSurfaceBreakdown(null);
+    setRouteSummary(null);
+  };
+
   return (
     <>
       <div style={{ position: "absolute", top: 30, left: 100, zIndex: 1000 }}>
-        <button 
-          onClick={() => { setFrom(null); setTo(null); setRouteData(null); }} 
-          style={{ marginRight: 12, fontWeight: "bold", fontSize: "1rem", padding: "6px 16px" }}
-        >
-          Reset route
-        </button>
-        <span style={{ fontWeight: "bold", fontSize: "1rem" }}>{statusMsg}</span>
+        {from && to && (
+          <button
+            onClick={handleResetClick}
+            style={{ marginRight: 12, fontWeight: "bold", fontSize: "1rem", padding: "6px 16px" }}
+          >
+            Reset route
+          </button>
+        )}
+        <span style={{
+          fontWeight: "bold",
+          fontSize: "1rem",
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px #0001",
+          padding: "6px 16px"
+        }}>{statusMsg}</span>
       </div>
+
+      {/* Surface breakdown chart */}
+        {surfaceBreakdown && (
+          <div style={{ position: "absolute", top: 80, left: 100, zIndex: 1000, width: 350, background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px #0001", padding: 16 }}>
+            <SurfaceBarTextChart
+              data={surfaceBreakdown}
+              distance={routeSummary?.distance}
+              duration={routeSummary?.duration}
+            />
+          </div>
+        )}
+
       <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -81,7 +137,7 @@ const Map = () => {
             <Tooltip direction="top" offset={[0, -10]} permanent>End: B</Tooltip>
           </Marker>
         )}
-        {geoJsonData && (
+        {/* {geoJsonData && (
           <GeoJSON 
             data={geoJsonData} 
             style={getFeatureStyle}
@@ -89,7 +145,7 @@ const Map = () => {
               layer.bindPopup(feature.properties.surface);
             }}
           />
-        )}
+        )} */}
         {routeData && (
           <RouteLayer routeData={routeData} />
         )}
