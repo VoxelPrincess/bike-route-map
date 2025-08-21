@@ -1,3 +1,5 @@
+ # Surface percentage is currently calculated only for the first route point.
+ # To analyze the whole route, further development is required.
 import requests
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
