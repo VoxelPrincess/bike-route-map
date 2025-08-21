@@ -54,7 +54,7 @@
   - [X] 8.2 Connect API to frontend: call POST /analyze-surface [#21](https://github.com/VoxelPrincess/bike-route-map/issues/21)
         Send selected route as LineString from frontend and receive breakdown data.
 
-  - [ ] 8.3 Show surface breakdown UI (chart or legend) [#52](https://github.com/VoxelPrincess/bike-route-map/issues/49)
+  - [X] 8.3 Show surface breakdown UI (chart or legend) [#52](https://github.com/VoxelPrincess/bike-route-map/issues/49)
         Display results visually (bar chart or list with % values).
 
   - [ ] 8.4 Local fallback: analyze surface from static GeoJSON [#53](https://github.com/VoxelPrincess/bike-route-map/issues/50)
@@ -76,7 +76,7 @@
   - [ ] 10.3 Plan database schema [#26](https://github.com/VoxelPrincess/bike-route-map/issues/26)
 
 - [ ] 11. Early Azure Deployment
-  - [ ] 11.1 Deploy current frontend to Azure Static Web Apps [#34](https://github.com/VoxelPrincess/bike-route-map/issues/34)
+  - [X] 11.1 Deploy current frontend to Azure Static Web Apps [#34](https://github.com/VoxelPrincess/bike-route-map/issues/34)
   - [ ] 11.2 Enable GitHub Actions for CI/CD [#35](https://github.com/VoxelPrincess/bike-route-map/issues/35)
   - [ ] 11.3 Get temporary Azure subdomain [#36](https://github.com/VoxelPrincess/bike-route-map/issues/36)
   - [ ] 11.4 Test updates via `git push` [#37](https://github.com/VoxelPrincess/bike-route-map/issues/37)
