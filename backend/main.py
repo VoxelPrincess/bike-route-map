@@ -13,4 +13,4 @@ class LineString(BaseModel):
 def analyze_surface(data: LineString):
     lat, lon = data.coordinates[0][1], data.coordinates[0][0]
     result = query_overpass_surface(lat, lon)
-    return result
+    return result 

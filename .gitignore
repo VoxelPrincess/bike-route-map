@@ -40,3 +40,10 @@ __pycache__/
 backend/__pycache__/
 
 
+# Python venv
+venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+backend/__pycache__/
