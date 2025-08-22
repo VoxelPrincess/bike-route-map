@@ -27,7 +27,15 @@ jobs:
       - run: npm ci
       - run: npm run typecheck || true
       - run: npm run lint || true
-      - run: npm run build
+      - name: Show build env
+        run: echo "VITE_USE_SAMPLE=$VITE_USE_SAMPLE"
+        env:
+          VITE_USE_SAMPLE: '1'
+
+      - name: Build frontend (sample mode)
+        run: npm run build
+        env:
+          VITE_USE_SAMPLE: '1'   # enable demo route on production
 
       # Upload the built /dist to SWA (skip Oryx build)
       - name: Build And Deploy
@@ -51,5 +59,6 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_RIVER_099AD551E }}
           action: close
+
 
 
