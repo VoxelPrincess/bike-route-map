@@ -7,10 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node build artifacts
 node_modules
 dist
 dist-ssr
-*.local
 
 # Editor directories and files
 .vscode/*
@@ -23,27 +23,20 @@ dist-ssr
 *.sln
 *.sw?
 
-# Internal documentation (optional)
+# Internal documentation (keep)
 docs/code_style_notes.md
 
-# Local env files
+# Local env files (do NOT commit)
 .env
 .env.*.local
 *.local
+.env.development
+.env.production
 
-# Python venv
+# Python virtual envs
 venv/
 backend/venv/
 
-# Python cache
-__pycache__/
-backend/__pycache__/
-
-
-# Python venv
-venv/
-backend/venv/
-
-# Python cache
+# Python bytecode caches
 __pycache__/
 backend/__pycache__/
