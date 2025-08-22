@@ -1,4 +1,6 @@
-import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, useMap } from "react-leaflet";
+import * as L from "leaflet";
+import { useEffect as useEffectPane } from "react";
 import React, { useEffect, useState } from "react";
 import { fetchBikeRoute } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
@@ -19,6 +21,34 @@ const Map = () => {
   const [routeSummary, setRouteSummary] = useState<{ distance: number; duration: number } | null>(null);
 
   // Fetch route when both points are selected
+
+  // Custom SVG icons for A/B markers (compact)
+  const aIcon = L.icon({
+    iconUrl: '/icons/point-a.svg',
+    iconSize: [34, 40],
+    iconAnchor: [17, 40],
+  });
+  const bIcon = L.icon({
+    iconUrl: '/icons/point-b.svg',
+    iconSize: [34, 40],
+    iconAnchor: [17, 40],
+  });
+
+  // Setup custom panes for route and markers
+  const PaneSetup = () => {
+    const map = useMap();
+    useEffectPane(() => {
+      if (!map.getPane('route')) {
+        map.createPane('route');
+        map.getPane('route')!.style.zIndex = '400';
+      }
+      if (!map.getPane('markers')) {
+        map.createPane('markers');
+        map.getPane('markers')!.style.zIndex = '450';
+      }
+    }, [map]);
+    return null;
+  };
   useEffect(() => {
     if (from && to) {
       fetchBikeRoute(from, to)
@@ -121,6 +151,7 @@ const Map = () => {
         )}
 
       <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
+        <PaneSetup />
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -128,13 +159,13 @@ const Map = () => {
         <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
         {/* Show A/B markers before route is fetched */}
         {from && (
-          <Marker position={[from[1], from[0]]}>
-            <Tooltip direction="top" offset={[0, -10]} permanent>Start: A</Tooltip>
+          <Marker pane="markers" position={[from[1], from[0]]} icon={aIcon}>
+            <Tooltip className="label" direction="right" offset={[10, -16]} permanent>Start: A</Tooltip>
           </Marker>
         )}
         {to && (
-          <Marker position={[to[1], to[0]]}>
-            <Tooltip direction="top" offset={[0, -10]} permanent>End: B</Tooltip>
+          <Marker pane="markers" position={[to[1], to[0]]} icon={bIcon}>
+            <Tooltip className="label" direction="left" offset={[-10, -16]} permanent>End: B</Tooltip>
           </Marker>
         )}
         {/* {geoJsonData && (
@@ -147,7 +178,7 @@ const Map = () => {
           />
         )} */}
         {routeData && (
-          <RouteLayer routeData={routeData} />
+          <GeoJSON pane="route" data={routeData} style={{ weight: 6, color: '#7c3aed' }} />
         )}
       </MapContainer>
     </>
