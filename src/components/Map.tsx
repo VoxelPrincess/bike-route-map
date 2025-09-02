@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, useMap } from "react
 import * as L from "leaflet";
 import { useEffect as useEffectPane } from "react";
 import React, { useEffect, useState } from "react";
-import { fetchBikeRoute } from "../api/orsApi";
+import { fetchRouteAB } from "../api/orsApi";
 import RouteLayer from "./RouteLayer";
 import MapClickHandler from "./MapClickHandler";
 import { fetchSurfaceBreakdown } from "../api/surfaceApi";
@@ -51,7 +51,7 @@ const Map = () => {
   };
   useEffect(() => {
     if (from && to) {
-      fetchBikeRoute(from, to)
+      fetchRouteAB(from, to)
         .then(routeData => {
           setRouteData(routeData);
           // Extract the time and length of the route
@@ -70,6 +70,17 @@ const Map = () => {
     }
   }, [from, to]);
 
+  useEffect(() => {
+    if (routeData?.features?.[0]?.geometry) {
+      fetchSurfaceBreakdown(routeData.features[0].geometry)
+        .then(data => setSurfaceBreakdown(data))
+        .catch(err => {
+          setSurfaceBreakdown(null);
+          console.error('[surface-breakdown] Error:', err);
+        });
+    }
+  }, [routeData]);
+
   // Load surface data from test file
   // useEffect(() => {
   //   fetch('/test.geojson')
@@ -81,16 +92,16 @@ const Map = () => {
   // }, []);
 
   // Define styles for different surface types
-  useEffect(() => {
-    if (routeData?.features?.[0]?.geometry) {
-      fetchSurfaceBreakdown(routeData.features[0].geometry)
-        .then(data => setSurfaceBreakdown(data))
-        .catch(err => {
-          setSurfaceBreakdown(null);
-          console.error('[surface-breakdown] Error:', err);
-        });
-    }
-  }, [routeData]);
+  // useEffect(() => {
+  //   if (routeData?.features?.[0]?.geometry) {
+  //     fetchSurfaceBreakdown(routeData.features[0].geometry)
+  //       .then(data => setSurfaceBreakdown(data))
+  //       .catch(err => {
+  //         setSurfaceBreakdown(null);
+  //         console.error('[surface-breakdown] Error:', err);
+  //       });
+  //   }
+  // }, [routeData]);
 
   // const surfaceStyles = {
   //   asphalt: { color: '#333333', weight: 4 },

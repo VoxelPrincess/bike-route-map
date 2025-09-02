@@ -33,6 +33,12 @@ docs/code_style_notes.md
 .env.development
 .env.production
 
+# Vite env files (keep local)
+.env
+.env.*.local
+.env.development
+.env.production
+
 # Python virtual envs
 venv/
 backend/venv/
@@ -40,3 +46,9 @@ backend/venv/
 # Python bytecode caches
 __pycache__/
 backend/__pycache__/
+
+# keep local env out of git
+.env
+.env.*.local
+.env.development
+.env.production
