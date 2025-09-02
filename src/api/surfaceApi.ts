@@ -3,6 +3,10 @@ type SurfaceBreakdown = unknown;
 const RAW_BASE = import.meta.env.VITE_API_BASE as string | undefined;
 const API_BASE = RAW_BASE ? RAW_BASE.replace(/\/$/, "") : undefined;
 
+if (!import.meta.env.VITE_API_BASE) {
+  return null;
+}
+
 export async function fetchSurfaceBreakdown(
   lineStringGeoJson: any
 ): Promise<SurfaceBreakdown | null> {

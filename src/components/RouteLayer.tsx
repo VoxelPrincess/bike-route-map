@@ -10,6 +10,8 @@ const surfaceColors: Record<string, string> = {
     grass: "#6b8e23"         // olive drab
 };
 
+const SHOW_ROUTE = import.meta.env.VITE_SHOW_ROUTE !== '0';
+
 function getRouteStyle(feature: any) {
   const surface = feature?.properties?.surface;
   return {
@@ -21,6 +23,8 @@ function getRouteStyle(feature: any) {
 }
 
 function RouteLayer({ routeData }: { routeData: any }) {
+  if (!SHOW_ROUTE) return null;
+
   const iconA = L.divIcon({
     className: "custom-marker-icon",
     html: '<div style="background:#1976d2;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:16px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);">A</div>',

@@ -1,0 +1,7 @@
+# ...existing code...
+- name: Build frontend (sample mode, route hidden)
+  run: npm run build
+  env:
+    VITE_USE_SAMPLE: '1'   # the route is taken from /sample-route.json, we do not call ORS
+    VITE_SHOW_ROUTE: '0'   # we don't draw a line at all on production
+# ...existing code...

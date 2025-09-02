@@ -1,4 +1,3 @@
-
 // OpenRouteService API integration for bike routing
 const ORS_API_BASE = 'https://api.openrouteservice.org/v2';
 const API_KEY = import.meta.env.VITE_ORS_API_KEY;
@@ -10,17 +9,14 @@ export const testCoordinates = {
   endPoint: [24.962, 60.2049] as [number, number]     // North Helsinki
 };
 
-export async function fetchBikeRoute(
+export async function fetchRouteAB(
   start: [number, number],
   end: [number, number]
 ) {
   if (USE_SAMPLE) {
-    // Demo mode: do not call ORS, always use local sample file (no cache)
-    const url = `/sample-route.json?v=${Date.now()}`;
-    console.info('[route-fetch] mode=sample', url);
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`sample ${res.status}`);
-    return await res.json(); // GeoJSON
+    const res = await fetch('/sample-route.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('sample-route.json not found');
+    return await res.json();
   }
 
   // Real ORS request (used in development/local only)
