@@ -77,9 +77,9 @@
 
 - [ ] 11. Early Azure Deployment
   - [X] 11.1 Deploy current frontend to Azure Static Web Apps [#34](https://github.com/VoxelPrincess/bike-route-map/issues/34)
-  - [ ] 11.2 Enable GitHub Actions for CI/CD [#35](https://github.com/VoxelPrincess/bike-route-map/issues/35)
-  - [ ] 11.3 Get temporary Azure subdomain [#36](https://github.com/VoxelPrincess/bike-route-map/issues/36)
-  - [ ] 11.4 Test updates via `git push` [#37](https://github.com/VoxelPrincess/bike-route-map/issues/37)
+  - [X] 11.2 Enable GitHub Actions for CI/CD [#35](https://github.com/VoxelPrincess/bike-route-map/issues/35)
+  - [X] 11.3 Get temporary Azure subdomain [#36](https://github.com/VoxelPrincess/bike-route-map/issues/36)
+  - [X] 11.4 Test updates via `git push` [#37](https://github.com/VoxelPrincess/bike-route-map/issues/37)
   - [ ] 11.5 Connect custom domain via Hostinger DNS [#38](https://github.com/VoxelPrincess/bike-route-map/issues/38)
   - [ ] 11.6* Deploy OpenLayers version (optional, subpath `/ol`)
 
