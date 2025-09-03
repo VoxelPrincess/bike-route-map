@@ -11,18 +11,12 @@ import { SurfaceBarTextChart } from "./analytics/SurfaceBarChart";
 const helsinkiCoords: [number, number] = [60.1699, 24.9384];
 
 const Map = () => {
-  // const [geoJsonData, setGeoJsonData] = useState<any>(null);
-
-  // Add state for route points
   const [from, setFrom] = useState<[number, number] | null>(null);
   const [to, setTo] = useState<[number, number] | null>(null);
   const [routeData, setRouteData] = useState<any>(null);
   const [surfaceBreakdown, setSurfaceBreakdown] = useState<Record<string, number> | null>(null);
   const [routeSummary, setRouteSummary] = useState<{ distance: number; duration: number } | null>(null);
 
-  // Fetch route when both points are selected
-
-  // Custom SVG icons for A/B markers (compact)
   const aIcon = L.icon({
     iconUrl: '/icons/point-a.svg',
     iconSize: [34, 40],
@@ -34,7 +28,6 @@ const Map = () => {
     iconAnchor: [17, 40],
   });
 
-  // Setup custom panes for route and markers
   const PaneSetup = () => {
     const map = useMap();
     useEffectPane(() => {
@@ -49,12 +42,12 @@ const Map = () => {
     }, [map]);
     return null;
   };
+
   useEffect(() => {
     if (from && to) {
       fetchRouteAB(from, to)
         .then(routeData => {
           setRouteData(routeData);
-          // Extract the time and length of the route
           const summary = routeData?.features?.[0]?.properties?.summary;
           if (summary && typeof summary.distance === 'number' && typeof summary.duration === 'number') {
             setRouteSummary({ distance: summary.distance, duration: summary.duration });
@@ -81,46 +74,10 @@ const Map = () => {
     }
   }, [routeData]);
 
-  // Load surface data from test file
-  // useEffect(() => {
-  //   fetch('/test.geojson')
-  //     .then(response => response.json())
-  //     .then(data => setGeoJsonData(data))
-  //     .catch(error => {
-  //       console.error('[geojson-load] Failed to load GeoJSON data:', error);
-  //     });
-  // }, []);
-
-  // Define styles for different surface types
-  // useEffect(() => {
-  //   if (routeData?.features?.[0]?.geometry) {
-  //     fetchSurfaceBreakdown(routeData.features[0].geometry)
-  //       .then(data => setSurfaceBreakdown(data))
-  //       .catch(err => {
-  //         setSurfaceBreakdown(null);
-  //         console.error('[surface-breakdown] Error:', err);
-  //       });
-  //   }
-  // }, [routeData]);
-
-  // const surfaceStyles = {
-  //   asphalt: { color: '#333333', weight: 4 },
-  //   gravel: { color: '#8B4513', weight: 4 },
-  //   cobblestone: { color: '#708090', weight: 4 }
-  // };
-
-  // const getFeatureStyle = (feature: any) => {
-  //   const surfaceType = feature.properties.surface;
-  //   return surfaceStyles[surfaceType as keyof typeof surfaceStyles] || { color: '#FF0000', weight: 4 };
-  // };
-
-
-  // Guidance message
   let statusMsg = "Click to select point A";
   if (from && !to) statusMsg = "Click to select point B";
   else if (from && to) statusMsg = "Route is shown. Reset to select new points.";
 
-  // Reset handler
   const handleResetClick = () => {
     setFrom(null);
     setTo(null);
@@ -150,16 +107,25 @@ const Map = () => {
         }}>{statusMsg}</span>
       </div>
 
-      {/* Surface breakdown chart */}
-        {surfaceBreakdown && (
-          <div style={{ position: "absolute", top: 80, left: 100, zIndex: 1000, width: 350, background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px #0001", padding: 16 }}>
-            <SurfaceBarTextChart
-              data={surfaceBreakdown}
-              distance={routeSummary?.distance}
-              duration={routeSummary?.duration}
-            />
-          </div>
-        )}
+      {surfaceBreakdown && (
+        <div style={{
+          position: "absolute",
+          top: 80,
+          left: 100,
+          zIndex: 1000,
+          background: "#fff",
+          borderRadius: 8,
+          boxShadow: "0 2px 8px #0001",
+          padding: 16
+        }}>
+          <SurfaceBarTextChart
+            bare
+            data={surfaceBreakdown}
+            distance={routeSummary?.distance}
+            duration={routeSummary?.duration}
+          />
+        </div>
+      )}
 
       <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom={true} style={{ height: "100vh", width: "100%" }}>
         <PaneSetup />
@@ -168,7 +134,6 @@ const Map = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
-        {/* Show A/B markers before route is fetched */}
         {from && (
           <Marker pane="markers" position={[from[1], from[0]]} icon={aIcon}>
             <Tooltip className="label" direction="right" offset={[10, -16]} permanent>Start: A</Tooltip>
@@ -179,15 +144,6 @@ const Map = () => {
             <Tooltip className="label" direction="left" offset={[-10, -16]} permanent>End: B</Tooltip>
           </Marker>
         )}
-        {/* {geoJsonData && (
-          <GeoJSON 
-            data={geoJsonData} 
-            style={getFeatureStyle}
-            onEachFeature={(feature, layer) => {
-              layer.bindPopup(feature.properties.surface);
-            }}
-          />
-        )} */}
         {routeData && (
           <GeoJSON pane="route" data={routeData} style={{ weight: 6, color: '#7c3aed' }} />
         )}
