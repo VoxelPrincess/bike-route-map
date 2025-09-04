@@ -16,20 +16,26 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Internal documentation (keep)
-docs/code_style_notes.md
+# System files
+.DS_Store
+Thumbs.db
 
 # Local env files (do NOT commit)
 .env
+.env.local
 .env.*.local
-*.local
+.env.development
+.env.production
+
+# Vite env files (keep local only)
+.env
+.env.*.local
 .env.development
 .env.production
 
@@ -40,3 +46,4 @@ backend/venv/
 # Python bytecode caches
 __pycache__/
 backend/__pycache__/
+
