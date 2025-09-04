@@ -1,0 +1,6 @@
+# ...existing code...
+- name: Build frontend (sample mode)
+  run: npm run build
+  env:
+    VITE_USE_SAMPLE: '1'
+# ...existing code...
