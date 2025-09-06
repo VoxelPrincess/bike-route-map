@@ -90,6 +90,11 @@ uvicorn main:app --reload --port 8000
 
 ![Problem Domain Diagram](docs/ProblemDomain.png)
 
+The Problem Domain diagram illustrates potential entities and relationships affecting bicycle route choice (e.g., surface type, weather, safety, and feedback). The current MVP focuses only on route geometry and surface data, while other factors are considered future scope.
+
+
+---
+
 
 ## 7. Solution Domain Overview
 
@@ -133,3 +138,13 @@ Each PR triggers GitHub Actions → Azure SWA builds a **temporary preview envir
 The preview URL is shown in the PR checks and disappears after the PR is merged.
 
 👉 For full deployment details, see [DEPLOY.md](./DEPLOY.md).
+
+---
+
+## Demo
+
+- Local preview (screenshot):
+  
+  ![Local demo](docs/screenshots/local-demo.png)
+
+- Video demo: [Watch on Google Drive](<https://drive.google.com/file/d/1LXbNfJVwOeqU_r5m7MkkzT5k7p-V8szH/view?usp=drive_link>)
