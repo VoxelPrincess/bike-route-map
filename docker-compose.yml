@@ -1,0 +1,8 @@
+name: bike-route-map
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
