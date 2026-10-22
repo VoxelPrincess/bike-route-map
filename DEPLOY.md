@@ -3,8 +3,12 @@
 - **Resource:** `bike-frontend` (Free, Region: West Europe)  
 - **Branch:** `main`  
 - **App location:** `/` • **Output:** `dist` • **API:** *(empty)*  
-- **URL:** https://kind-river-099ad551e.2.azurestaticapps.net  
+- **URL:** https://icy-dune-080042c1e.3.azurestaticapps.net  
 - **Notes:** SPA fallback via `staticwebapp.config.json` prevents 404 on deep links.
+
+### Historical URLs
+
+- `kind-river-099ad551e.2.azurestaticapps.net` (previous SWA hostname)
 
 ## 11.4 — Test Updates via Pull Request
 
