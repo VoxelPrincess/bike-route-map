@@ -17,10 +17,10 @@ with surface type visualization and smart routing using open data.
 ## 2. Tech Stack
 
 - **Frontend:** React + Leaflet + Vite  
-- **Backend:** FastAPI (Python) — *(planned, placeholder in /backend)*  
+- **Backend:** FastAPI (Python) — local service, Dockerized for development  
 - **Database:** PostgreSQL + PostGIS — *(planned)*  
 - **GIS:** Location and surface data via GeoJSON, ORS API, Overpass API  
-- **Deployment:** Azure Static Web Apps (current), Docker + Azure Containers *(planned)*
+- **Deployment:** Azure Static Web Apps (frontend), Docker Compose (local backend), Azure Containers *(planned)*
 
 ---
 
@@ -42,23 +42,49 @@ npm run build
 npm run preview
 ```
 
-### Backend (optional / FastAPI placeholder)
+### Backend (local without Docker)
 
-```
+```bash
+# from project root
+cd backend
+
 # create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate   # Linux / macOS
-venv\Scripts\activate      # Windows
+python3 -m venv .venv
+source .venv/bin/activate   # Linux / macOS
+# .venv\Scripts\activate   # Windows
 
 # install dependencies
 pip install -r requirements.txt
 
 # run the FastAPI server
-uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8000
 ```
-> Note: The backend folder currently contains a FastAPI skeleton only.  
-> The frontend communicates directly with **ORS (OpenRouteService)** and **Overpass API** for routing and surface data.  
-> Integration with a custom FastAPI backend and Azure containers is planned for future versions.
+
+### Backend via Docker Compose
+
+Requirements:
+- Docker Desktop (or Docker Engine + Compose plugin)
+- Port `${BACKEND_PORT:-8000}` available on host
+
+```bash
+# from project root
+docker compose up --build backend
+```
+
+Backend docs: http://localhost:8000/docs
+
+To use a different host port, set `BACKEND_PORT` in `.env` (see `.env.example`):
+
+```bash
+BACKEND_PORT=8010 docker compose up --build backend
+```
+
+```bash
+# stop containers
+docker compose down
+```
+
+> Note: The frontend currently communicates directly with **ORS (OpenRouteService)** and uses backend surface analysis in local mode.
 
 ---
 
@@ -67,7 +93,7 @@ uvicorn main:app --reload --port 8000
 ```
 /src       → React components, map logic
 /public    → Static files (e.g., GeoJSON, favicon)
-/backend   → FastAPI placeholder (to be expanded)
+/backend   → FastAPI backend (local + Docker)
 /docs      → Diagrams, MVP notes, problem/solution domain docs
 ```
 

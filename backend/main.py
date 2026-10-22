@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
-from .query_overpass_surface import query_overpass_surface
+from query_overpass_surface import query_overpass_surface
 
 app = FastAPI()
 
