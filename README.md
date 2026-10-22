@@ -86,6 +86,9 @@ docker compose down
 
 > Note: The frontend currently communicates directly with **ORS (OpenRouteService)** and uses backend surface analysis in local mode.
 
+For surface-analysis errors, cache behavior, limitations and tests, see
+[Surface API notes](backend/SURFACE_API.md).
+
 ---
 
 ## 4. Folder Structure
