@@ -205,7 +205,7 @@ def route_with_surface(data: RouteRequest):
             error=None,
         )
     except SurfaceDataError as exc:
-        logger.warning("[route-with-surface] surface_invalid_data (%s)", str(exc))
+        logger.warning("[route-with-surface] %s (%s)", exc.code, str(exc))
         return _route_envelope(
             status="partial",
             route=route_payload,

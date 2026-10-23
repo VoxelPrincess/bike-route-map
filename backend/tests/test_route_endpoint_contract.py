@@ -92,6 +92,14 @@ class RouteEndpointContractTests(unittest.TestCase):
         self.assertIsNone(body["error"])
         self.assertEqual(body["route"]["properties"]["distance_m"], 1200.0)
         self.assertEqual(body["surface"]["source"], "ors.extra_info.surface")
+        self.assertEqual(body["surface"]["summary"], [{
+            "surface_code": 3, "surface": "asphalt",
+            "distance_m": 1200.0, "percent": 100.0,
+        }])
+        self.assertEqual(body["surface"]["segments"], [{
+            "surface_code": 3, "surface": "asphalt",
+            "index_start": 0, "index_end": 1,
+        }])
 
     def test_partial_response_when_surface_is_missing(self):
         payload = {
