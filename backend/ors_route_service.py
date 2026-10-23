@@ -1,11 +1,4 @@
-"""ORS routing client helpers for /api/v1/route.
-
-Stage 1 scope:
-- live ORS request through backend
-- controlled failures with stable error codes
-- route extraction
-- surface extraction (partial response when unavailable/invalid)
-"""
+"""ORS routing, validation and surface normalization for /api/v1/route."""
 
 from __future__ import annotations
 
@@ -225,62 +218,115 @@ def extract_route_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
-    features = payload.get("features")
-    if not isinstance(features, list) or len(features) == 0 or not isinstance(features[0], dict):
-        raise SurfaceDataError("Surface data is unavailable")
+# ORS Surface IDs, documentation v10.0.1 (checked 2026-10-23):
+# https://giscience.github.io/openrouteservice/api-reference/endpoints/directions/extra-info/surface
+# Retain documented legacy IDs 5, 9 and 16 for responses from older graphs.
+SURFACE_LABELS = {
+    0: "unknown", 1: "paved", 2: "unpaved", 3: "asphalt", 4: "concrete",
+    5: "cobblestone", 6: "metal", 7: "wood", 8: "compacted_gravel",
+    9: "fine_gravel", 10: "gravel", 11: "dirt", 12: "ground", 13: "ice",
+    14: "paving_stones", 15: "sand", 16: "woodchips", 17: "grass",
+    18: "grass_paver",
+}
 
-    feature = features[0]
-    properties = feature.get("properties")
-    extras = properties.get("extras") if isinstance(properties, dict) else None
-    surface = extras.get("surface") if isinstance(extras, dict) else None
-    if not isinstance(surface, dict):
+# Project validation tolerances; not a claim about real-road accuracy.
+SURFACE_COMPARISON_EPSILON = 1e-9
+
+
+def _surface_number(value: Any) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise SurfaceDataError("Surface summary contains a nonnumeric value")
+    try:
+        number = float(value)
+    except OverflowError as exc:
+        raise SurfaceDataError("Surface summary contains an invalid number") from exc
+    if not math.isfinite(number) or number < 0:
+        raise SurfaceDataError("Surface summary contains an invalid number")
+    return number
+
+
+def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize extras against the route from the same GeoJSON response.
+
+    The caller validates the route first, so surface failures can preserve it.
+    Amount is already a percentage. No lengths or missing edges are invented.
+    """
+    route = extract_route_payload(payload)
+    properties = payload["features"][0]["properties"]
+    extras = properties.get("extras")
+    if extras is None:
         raise SurfaceDataError("Surface extras are missing", code="surface_unavailable")
+    if not isinstance(extras, dict):
+        raise SurfaceDataError("Surface extras are invalid")
+    surface = extras.get("surface")
+    if surface is None:
+        raise SurfaceDataError("Surface extras are missing", code="surface_unavailable")
+    if not isinstance(surface, dict):
+        raise SurfaceDataError("Surface extras are invalid")
 
     summary = surface.get("summary")
     values = surface.get("values")
-    if not isinstance(summary, list) or not isinstance(values, list):
-        raise SurfaceDataError("Surface extras are invalid")
-    if len(summary) == 0 or len(values) == 0:
+    for rows in (summary, values):
+        if rows is not None and not isinstance(rows, list):
+            raise SurfaceDataError("Surface extras are invalid")
+    if not summary or not values:
         raise SurfaceDataError("Surface extras are unavailable", code="surface_unavailable")
 
+    distance = route["properties"]["distance_m"]
+    point_count = len(route["geometry"]["coordinates"])
+    normalized_summary = []
+    summary_codes = set()
     for row in summary:
         if not isinstance(row, dict):
             raise SurfaceDataError("Surface summary rows are invalid")
-        if "value" not in row or "distance" not in row or "amount" not in row:
-            raise SurfaceDataError("Surface summary rows are incomplete")
-        value = row.get("value")
-        distance = row.get("distance")
-        amount = row.get("amount")
+        code = row.get("value")
+        if type(code) is not int or code in summary_codes:
+            raise SurfaceDataError("Surface summary codes are invalid or duplicated")
+        length = _surface_number(row.get("distance"))
+        percent = _surface_number(row.get("amount"))
+        if percent > 100:
+            raise SurfaceDataError("Surface percentage is outside [0, 100]")
+        if abs(percent - length / distance * 100) > 0.15 + SURFACE_COMPARISON_EPSILON:
+            raise SurfaceDataError("Surface percentage does not match its distance")
+        summary_codes.add(code)
+        normalized_summary.append({
+            "surface_code": code,
+            "surface": SURFACE_LABELS.get(code, "unknown"),
+            "distance_m": length,
+            "percent": percent,
+        })
 
-        if isinstance(value, bool) or not isinstance(value, int):
-            raise SurfaceDataError("Surface summary rows are invalid")
-        if isinstance(distance, bool) or not isinstance(distance, (int, float)):
-            raise SurfaceDataError("Surface summary rows are invalid")
-        if isinstance(amount, bool) or not isinstance(amount, (int, float)):
-            raise SurfaceDataError("Surface summary rows are invalid")
+    total_distance = math.fsum(row["distance_m"] for row in normalized_summary)
+    total_percent = math.fsum(row["percent"] for row in normalized_summary)
+    if abs(total_distance - distance) > max(1.0, 0.001 * distance) + SURFACE_COMPARISON_EPSILON:
+        raise SurfaceDataError("Surface distances do not cover the route")
+    if abs(total_percent - 100) > 0.01 * len(summary) + SURFACE_COMPARISON_EPSILON:
+        raise SurfaceDataError("Surface percentages do not cover the route")
 
-        if not math.isfinite(float(distance)) or not math.isfinite(float(amount)):
-            raise SurfaceDataError("Surface summary rows are invalid")
-
-        if float(distance) < 0 or float(amount) < 0:
-            raise SurfaceDataError("Surface summary rows are invalid")
-
+    segments = []
+    segment_codes = set()
+    previous_end = 0
     for segment in values:
-        if not isinstance(segment, list) or len(segment) < 3:
-            raise SurfaceDataError("Surface segment rows are invalid")
-        start_idx, end_idx, surface_code = segment[0], segment[1], segment[2]
-        if isinstance(start_idx, bool) or not isinstance(start_idx, int):
-            raise SurfaceDataError("Surface segment rows are invalid")
-        if isinstance(end_idx, bool) or not isinstance(end_idx, int):
-            raise SurfaceDataError("Surface segment rows are invalid")
-        if isinstance(surface_code, bool) or not isinstance(surface_code, int):
-            raise SurfaceDataError("Surface segment rows are invalid")
-        if start_idx < 0 or end_idx < start_idx:
-            raise SurfaceDataError("Surface segment rows are invalid")
+        if not isinstance(segment, list) or len(segment) != 3:
+            raise SurfaceDataError("Surface segment rows must be triples")
+        start, end, code = segment
+        if any(type(value) is not int for value in segment):
+            raise SurfaceDataError("Surface segment values must be integers")
+        if not (0 <= start < end < point_count) or start != previous_end:
+            raise SurfaceDataError("Surface segments must cover consecutive route edges")
+        segments.append({
+            "surface_code": code,
+            "surface": SURFACE_LABELS.get(code, "unknown"),
+            "index_start": start,
+            "index_end": end,
+        })
+        segment_codes.add(code)
+        previous_end = end
+    if previous_end != point_count - 1 or segment_codes != summary_codes:
+        raise SurfaceDataError("Surface segments and summary do not cover the same route")
 
     return {
-        "summary": summary,
-        "segments": values,
+        "summary": normalized_summary,
+        "segments": segments,
         "source": "ors.extra_info.surface",
     }
