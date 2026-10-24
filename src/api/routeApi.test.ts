@@ -57,6 +57,15 @@ describe('backend routing', () => {
       await expect(request()).rejects.toMatchObject({ code: 'invalid_response' });
     });
 
+  it('rejects surface segments that extend beyond the returned route geometry', async () => {
+    const body = liveResult();
+    const surface = body.surface;
+    if (!surface) throw new Error('Expected an ORS surface result.');
+    surface.segments[0].index_end = 2;
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(body)));
+    await expect(request()).rejects.toMatchObject({ code: 'invalid_response' });
+  });
+
   it('reports missing backend configuration without making a request', async () => {
     vi.stubEnv('VITE_API_BASE', '');
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);

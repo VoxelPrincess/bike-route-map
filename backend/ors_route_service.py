@@ -245,6 +245,17 @@ def _surface_number(value: Any) -> float:
     return number
 
 
+def _surface_code(value: Any) -> int:
+    """Normalize an ORS category value, which the API schema defines as numeric."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise SurfaceDataError("Surface summary codes must be integers")
+    if isinstance(value, float):
+        if not math.isfinite(value) or not value.is_integer():
+            raise SurfaceDataError("Surface summary codes must be integers")
+        return int(value)
+    return value
+
+
 def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize extras against the route from the same GeoJSON response.
 
@@ -279,9 +290,9 @@ def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     for row in summary:
         if not isinstance(row, dict):
             raise SurfaceDataError("Surface summary rows are invalid")
-        code = row.get("value")
-        if type(code) is not int or code in summary_codes:
-            raise SurfaceDataError("Surface summary codes are invalid or duplicated")
+        code = _surface_code(row.get("value"))
+        if code in summary_codes:
+            raise SurfaceDataError("Surface summary codes are duplicated")
         length = _surface_number(row.get("distance"))
         percent = _surface_number(row.get("amount"))
         if percent > 100:

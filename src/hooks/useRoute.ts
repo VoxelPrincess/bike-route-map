@@ -33,6 +33,17 @@ export function useRoute(from: Coordinates | null, to: Coordinates | null) {
         if (result.status === 'partial') {
           console.warn('[route] Surface unavailable', { code: result.error.code, message: result.error.message });
         }
+        if (result.status === 'ok') {
+          console.groupCollapsed('[route] Surface breakdown (ORS)');
+          console.table(result.surface.summary.map(row => ({
+            code: row.surface_code,
+            surface: row.surface,
+            distance_km: Number((row.distance_m / 1000).toFixed(3)),
+            percent: row.percent,
+          })));
+          console.info(`Route surface segments: ${result.surface.segments.length}`);
+          console.groupEnd();
+        }
         setState({ selection, requestId, phase: 'ready', result, message: null });
       }).catch(error => {
         if (abort.signal.aborted || requestId !== generation.current) return;

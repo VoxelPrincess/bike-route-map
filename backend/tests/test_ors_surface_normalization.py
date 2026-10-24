@@ -70,6 +70,12 @@ class SurfaceNormalizationTests(unittest.TestCase):
         self.assertEqual(result["summary"][2]["surface_code"], 0)
         self.assertEqual(result["segments"][0]["surface"], "unknown")
 
+    def test_summary_accepts_integer_valued_numeric_codes(self):
+        for row in self.surface["summary"]:
+            row["value"] = float(row["value"])
+        result = extract_surface_payload(self.payload)
+        self.assertEqual([row["surface_code"] for row in result["summary"]], [3, 10, 0])
+
     def test_all_unknown_is_valid(self):
         self.surface.update(summary=[{"value": 0, "distance": 300, "amount": 100}],
                             values=[[0, 3, 0]])
@@ -122,7 +128,8 @@ class SurfaceNormalizationTests(unittest.TestCase):
 
     def test_bad_summary_numbers_and_duplicate_codes(self):
         original = copy.deepcopy(self.surface["summary"])
-        for field, value in [("value", True), ("value", 3.0), ("distance", True),
+        for field, value in [("value", True), ("value", 3.5), ("value", float("nan")),
+                             ("distance", True),
                              ("distance", -1), ("distance", float("inf")),
                              ("distance", 10 ** 400), ("amount", float("nan")),
                              ("amount", "50"), ("amount", 101), ("amount", -1)]:
