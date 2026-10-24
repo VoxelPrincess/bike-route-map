@@ -6,8 +6,7 @@ export default defineConfig({
   base: '/', // important: SWA get gives site from the root of the domain
   plugins: [react()],
   server: {
-    proxy: {
-      '/analyze-surface': 'http://localhost:8000'
-    }
+    port: 5173,
+    strictPort: true
   }
 })
