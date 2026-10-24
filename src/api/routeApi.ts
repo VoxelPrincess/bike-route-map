@@ -56,16 +56,39 @@ function isError(value: unknown): value is ApiError {
     && typeof value.message === 'string' && value.message.length > 0;
 }
 
-function isSurface(value: unknown): value is SurfaceData {
-  return record(value) && value.source === 'ors.extra_info.surface'
-    && Array.isArray(value.summary) && value.summary.length > 0
-    && value.summary.every(row => record(row) && integer(row.surface_code)
-      && typeof row.surface === 'string' && nonnegative(row.distance_m)
-      && nonnegative(row.percent) && row.percent <= 100)
-    && Array.isArray(value.segments) && value.segments.length > 0
-    && value.segments.every(row => record(row) && integer(row.surface_code)
-      && typeof row.surface === 'string' && integer(row.index_start) && row.index_start >= 0
-      && integer(row.index_end) && row.index_end > row.index_start);
+function isSurfaceSummaryRow(value: unknown): value is SurfaceData['summary'][number] {
+  return record(value) && integer(value.surface_code)
+    && typeof value.surface === 'string' && nonnegative(value.distance_m)
+    && nonnegative(value.percent) && value.percent <= 100;
+}
+
+function isSurfaceSegment(value: unknown): value is SurfaceData['segments'][number] {
+  return record(value) && integer(value.surface_code)
+    && typeof value.surface === 'string' && integer(value.index_start) && value.index_start >= 0
+    && integer(value.index_end) && value.index_end > value.index_start;
+}
+
+function isSurface(value: unknown, pointCount: number): value is SurfaceData {
+  if (!record(value) || value.source !== 'ors.extra_info.surface'
+    || !Array.isArray(value.summary) || value.summary.length === 0
+    || !value.summary.every(isSurfaceSummaryRow)
+    || !Array.isArray(value.segments) || value.segments.length === 0
+    || !value.segments.every(isSurfaceSegment)) return false;
+
+  const summaryCodes = new Set(value.summary.map(row => row.surface_code));
+  if (summaryCodes.size !== value.summary.length) return false;
+
+  let nextStart = 0;
+  const segmentCodes = new Set<number>();
+  for (const segment of value.segments) {
+    if (segment.index_start !== nextStart || segment.index_end >= pointCount) return false;
+    nextStart = segment.index_end;
+    segmentCodes.add(segment.surface_code);
+  }
+
+  return nextStart === pointCount - 1
+    && segmentCodes.size === summaryCodes.size
+    && [...summaryCodes].every(code => segmentCodes.has(code));
 }
 
 function invalidResponse(): never {
@@ -84,7 +107,7 @@ function parseLiveResult(value: unknown, response: Response): LiveRouteResult {
   if (value.status === 'partial' && value.surface === null && isError(value.error)) {
     return { status: 'partial', mode: 'live', route: value.route, surface: null, error: value.error };
   }
-  if (value.status === 'ok' && isSurface(value.surface) && value.error === null) {
+  if (value.status === 'ok' && isSurface(value.surface, value.route.geometry.coordinates.length) && value.error === null) {
     return { status: 'ok', mode: 'live', route: value.route, surface: value.surface, error: null };
   }
   return invalidResponse();
