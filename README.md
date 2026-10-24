@@ -28,6 +28,17 @@ with surface type visualization and smart routing using open data.
 
 ### Frontend
 
+Copy `.env.example` to `.env` if you do not already have a local configuration.
+For live local routing, set `VITE_USE_SAMPLE=0` and
+`VITE_API_BASE=http://localhost:8000`. Restart Vite after changing these values.
+The development server uses port 5173 and stops if that port is occupied,
+matching the backend's allowed local origins.
+
+Set `VITE_USE_SAMPLE=1` to display the fixed demo route without a backend.
+Demo mode is labeled on the map; metrics absent from the sample are not shown.
+Live failures never fall back to the demo. The icy-dune build explicitly keeps
+sample mode enabled until the cloud backend is connected in #41/#42.
+
 ```bash
 # install dependencies
 npm install
@@ -40,6 +51,10 @@ npm run build
 
 # preview the production build locally
 npm run preview
+
+# frontend tests and TypeScript checks
+npm test
+npm run typecheck
 ```
 
 ### Backend (local without Docker)
@@ -55,6 +70,9 @@ source .venv/bin/activate   # Linux / macOS
 
 # install dependencies
 pip install -r requirements.txt
+
+# set the server key in this terminal before starting live routing
+export ORS_API_KEY=your_server_key_here
 
 # run the FastAPI server
 python -m uvicorn main:app --reload --port 8000
@@ -84,9 +102,19 @@ BACKEND_PORT=8010 docker compose up --build backend
 docker compose down
 ```
 
-> Note: The frontend currently communicates directly with **ORS (OpenRouteService)** and uses backend surface analysis in local mode.
+The live frontend uses `POST /api/v1/route` on the backend. The ORS key belongs
+only in the backend process environment, never in a `VITE_` variable. The local
+Uvicorn command above inherits that environment; the current Compose file does
+not yet forward the key into the container.
 
-For surface-analysis errors, cache behavior, limitations and tests, see
+Route geometry, distance, time and surface data come from one backend result.
+A partial result keeps the route and metrics and explains that surface coverage
+is unavailable. Failed requests clear the previous result and offer a retry.
+Reset cancels pending work. Surface chart rendering and segment coloring are
+the next stage of #66; this stage displays the route and its metrics.
+
+The map no longer calls the legacy `/analyze-surface` endpoint. For that endpoint's
+errors, cache behavior, limitations and tests, see
 [Surface API notes](backend/SURFACE_API.md).
 
 ---
