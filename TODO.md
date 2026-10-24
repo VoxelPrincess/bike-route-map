@@ -60,10 +60,12 @@
   - [ ] 8.4 Local fallback: analyze surface from static GeoJSON [#53](https://github.com/VoxelPrincess/bike-route-map/issues/50)
         Optional dev mode: load local surface data and show breakdown (no Overpass).
 
-  - [ ] 8.5 Accurate Surface Breakdown by Route Geometry [#54](https://github.com/VoxelPrincess/bike-route-map/issues/54)
-        Use shapely intersection to calculate exact surface percentages along the route using surface-tagged ways from Overpass API.
+  - [ ] 8.5 Compare ORS surface data with Shapely + Overpass [#54](https://github.com/VoxelPrincess/bike-route-map/issues/54)
+        Stays open after 8.7. Compare the two methods along the route. Intersection is a candidate method, not a promise of exact percentages.
 
-  - [ ] 8.6 Improve /analyze-surface: caching + error handling [#55](https://github.com/VoxelPrincess/bike-route-map/issues/55)
+  - [X] 8.6 Improve /analyze-surface: caching + error handling [#55](https://github.com/VoxelPrincess/bike-route-map/issues/55)
+
+  - [ ] 8.7 Route surface breakdown from ORS extra_info=surface [#66](https://github.com/VoxelPrincess/bike-route-map/issues/66)
 
 - [ ] 9. Feedback feature
   - [ ] 9.1 Add feedback marker UI [#22](https://github.com/VoxelPrincess/bike-route-map/issues/22)
@@ -87,7 +89,7 @@
 
 ## Part 4 — Backend Deployment & Dockerization
 
-- [ ] 12. Containerize FastAPI backend with Docker [#39](https://github.com/VoxelPrincess/bike-route-map/issues/39)
+- [X] 12. Containerize FastAPI backend with Docker [#39](https://github.com/VoxelPrincess/bike-route-map/issues/39)
 - [ ] 13. Add PostgreSQL service via docker-compose [#40](https://github.com/VoxelPrincess/bike-route-map/issues/40)
 - [ ] 14. Deploy backend to Azure (Container Apps or App Service) [#41](https://github.com/VoxelPrincess/bike-route-map/issues/41)
 - [ ] 15. Connect frontend to deployed backend [#42](https://github.com/VoxelPrincess/bike-route-map/issues/42)

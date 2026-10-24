@@ -8,7 +8,7 @@ with surface type visualization and smart routing using open data.
 ## 1. Features
 
 - Surface type map (asphalt, gravel, cobblestone, etc.)
-- Route planning between A → B (via Digitransit API)
+- Route planning between A → B (via OpenRouteService)
 - Route surface type breakdown (percentages)
 - (Optional) User feedback for segments
 
@@ -28,6 +28,17 @@ with surface type visualization and smart routing using open data.
 
 ### Frontend
 
+Copy `.env.example` to `.env` if you do not already have a local configuration.
+For live local routing, set `VITE_USE_SAMPLE=0` and
+`VITE_API_BASE=http://localhost:8000`. Restart Vite after changing these values.
+The development server uses port 5173 and stops if that port is occupied,
+matching the backend's allowed local origins.
+
+Set `VITE_USE_SAMPLE=1` to display the fixed demo route without a backend.
+Demo mode is labeled on the map; metrics absent from the sample are not shown.
+Live failures never fall back to the demo. The icy-dune build explicitly keeps
+sample mode enabled until the cloud backend is connected in #41/#42.
+
 ```bash
 # install dependencies
 npm install
@@ -40,6 +51,10 @@ npm run build
 
 # preview the production build locally
 npm run preview
+
+# frontend tests and TypeScript checks
+npm test
+npm run typecheck
 ```
 
 ### Backend (local without Docker)
@@ -55,6 +70,9 @@ source .venv/bin/activate   # Linux / macOS
 
 # install dependencies
 pip install -r requirements.txt
+
+# set the server key in this terminal before starting live routing
+export ORS_API_KEY=your_server_key_here
 
 # run the FastAPI server
 python -m uvicorn main:app --reload --port 8000
@@ -84,9 +102,51 @@ BACKEND_PORT=8010 docker compose up --build backend
 docker compose down
 ```
 
-> Note: The frontend currently communicates directly with **ORS (OpenRouteService)** and uses backend surface analysis in local mode.
+The live frontend sends `POST /api/v1/route` with `start` and `end` coordinate
+pairs in `[longitude, latitude]` order and the `cycling-regular` profile. The
+backend makes one ORS directions request with `extra_info: ["surface"]`. Route
+geometry, distance, duration, the surface summary, and the geometry segments
+all come from that same ORS response. The response identifies the surface data
+as `ors.extra_info.surface`; the chart labels it as ORS data.
 
-For surface-analysis errors, cache behavior, limitations and tests, see
+Keep `ORS_API_KEY` only in the backend process environment, never in a `VITE_`
+variable. The local Uvicorn command above inherits that environment; the current
+Compose file does not yet forward the key into the container. There is no route
+cache on `/api/v1/route`.
+
+When routing succeeds but surface extras are missing or invalid, the backend
+returns HTTP 200 with `status: "partial"`: the map keeps the route, distance,
+and duration, explains that surface coverage is unavailable, and omits the
+surface chart and colored segments. Other failures return a non-2xx response
+with an error `code` and message. For example, `waypoint_not_found` (422) means
+ORS could not attach a selected point to its cycling network; `route_not_found`
+(404) means it could not find a path between the points. Failed requests clear
+the previous route and offer a retry. Reset or selecting new points cancels
+pending work; live failures never fall back to the sample route.
+Missing server configuration returns `ors_not_configured` (503), timeouts return
+`ors_timeout` (504), and connection or upstream failures return
+`ors_unavailable` (503).
+
+### Local live-route verification
+
+On 2026-10-24, a browser check with live mode enabled showed a 2.37 km route
+taking 9 min, its route line, and an ORS surface chart for asphalt, unknown,
+and paving stones. The returned breakdown was asphalt 2.208 km (93.18%),
+unknown 112 m (4.71%), and paving stones 50 m (2.11%); matching colored route
+segments were present in the map. The summary totals match the displayed route
+after rounding. This verifies that the frontend renders the backend's single
+live result; it does not independently validate the mapped surface against the
+road on the ground.
+
+Unknown surface remains unknown when OpenStreetMap has no recognized surface
+tag. Ferry routes are not excluded. Comparing ORS coverage with an independent
+source and checking real-road accuracy remain in [#54](https://github.com/VoxelPrincess/bike-route-map/issues/54).
+
+The surface properties, color mapping, and segment coloring in #19 are covered
+by this #66 implementation; #19 remains open and is not closed by this work.
+
+The map no longer calls the legacy `/analyze-surface` endpoint. For that endpoint's
+errors, cache behavior, limitations and tests, see
 [Surface API notes](backend/SURFACE_API.md).
 
 ---

@@ -1,0 +1,183 @@
+.surface-chart {
+  box-sizing: border-box;
+  width: min(380px, calc(100vw - 32px));
+  padding: 14px 16px 10px;
+  border: 1px solid rgb(255 255 255 / 75%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  color: #1f2937;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: auto;
+  backdrop-filter: blur(5px);
+}
+
+.surface-chart__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.surface-chart__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.surface-chart__source {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.surface-chart__list {
+  display: grid;
+  gap: 8px;
+  max-height: min(42vh, 320px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.surface-chart__row {
+  display: grid;
+  grid-template-columns: minmax(112px, 1.7fr) 62px minmax(48px, 0.7fr) 52px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.surface-chart__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.surface-chart__label-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.surface-chart__swatch {
+  box-sizing: border-box;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgb(31 41 55 / 18%);
+  border-radius: 3px;
+}
+
+.surface-chart__distance {
+  color: #4b5563;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.surface-chart__bar {
+  height: 16px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #eef1f4;
+}
+
+.surface-chart__fill {
+  box-sizing: border-box;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 220ms ease;
+}
+
+.surface-chart__fill--gravel { --grain: #d8b48a; --grain-size: 12px; --grain-width: 2px; }
+.surface-chart__fill--fine_gravel { --grain: #6b533f; --grain-size: 8px; --grain-width: 3px; }
+.surface-chart__fill--compacted { --grain: #8f7b5d; --grain-size: 8px; --grain-width: 3px; }
+.surface-chart__fill--ground { --grain: #9a7d52; --grain-size: 12px; --grain-width: 3px; }
+.surface-chart__fill--paved { --grain: #808b98; --grain-size: 12px; --grain-width: 3px; }
+.surface-chart__fill--concrete { --grain: #9aa7b6; --grain-size: 12px; --grain-width: 3px; }
+.surface-chart__fill--paving_stones { --grain: #5c6773; --grain-size: 8px; --grain-width: 3px; }
+.surface-chart__fill--wood { --grain: #8b5e34; --grain-size: 12px; --grain-width: 3px; }
+.surface-chart__fill--unknown { --grain: #7c8794; --grain-size: 8px; --grain-width: 2px; }
+
+.surface-chart__fill--fine_gravel,
+.surface-chart__fill--compacted,
+.surface-chart__fill--ground,
+.surface-chart__fill--paved,
+.surface-chart__fill--concrete,
+.surface-chart__fill--paving_stones,
+.surface-chart__fill--wood,
+.surface-chart__fill--unknown {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--grain) 0 var(--grain-width),
+    transparent var(--grain-width) var(--grain-size)
+  );
+  background-size: var(--grain-size) var(--grain-size);
+}
+
+.surface-chart__fill--gravel { --grain: #d8b48a; }
+.surface-chart__fill--sand { --grain: #c4a36b; }
+.surface-chart__fill--grass { --grain: #cfe9d0; }
+.surface-chart__fill--mud { --grain: #9b6a56; }
+.surface-chart__fill--snow { --grain: #dfe6ef; }
+
+.surface-chart__fill--gravel,
+.surface-chart__fill--sand,
+.surface-chart__fill--grass,
+.surface-chart__fill--mud,
+.surface-chart__fill--snow {
+  --grain-size: 12px;
+  --grain-radius: 2px;
+  background-image: radial-gradient(var(--grain) var(--grain-radius), transparent var(--grain-radius));
+  background-size: var(--grain-size) var(--grain-size);
+}
+
+.surface-chart__fill--rock,
+.surface-chart__fill--concrete_plates,
+.surface-chart__fill--metal {
+  --grain-size: 12px;
+  --grain-width: 2px;
+  background-image:
+    repeating-linear-gradient(45deg, var(--grain) 0 var(--grain-width), transparent var(--grain-width) var(--grain-size)),
+    repeating-linear-gradient(-45deg, var(--grain) 0 var(--grain-width), transparent var(--grain-width) var(--grain-size));
+  background-size: var(--grain-size) var(--grain-size);
+}
+
+.surface-chart__fill--rock { --grain: #e2e8f0; }
+.surface-chart__fill--concrete_plates { --grain: #9aa7b6; }
+.surface-chart__fill--metal { --grain: #7b8fa5; }
+
+.surface-chart__fill--pebblestone {
+  background-image:
+    radial-gradient(circle, #7a5838 2px, transparent 2px),
+    radial-gradient(circle, #d9be97 2px, transparent 2px);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+.surface-chart__percent {
+  color: #111827;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 430px) {
+  .surface-chart {
+    padding: 12px 12px 8px;
+  }
+
+  .surface-chart__row {
+    grid-template-columns: minmax(92px, 1.6fr) 54px minmax(24px, 0.5fr) 48px;
+    gap: 6px;
+    font-size: 0.7rem;
+  }
+}
