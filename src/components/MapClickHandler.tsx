@@ -1,17 +1,20 @@
 import { useMapEvent } from "react-leaflet";
+import type { Coordinates } from '../api/routeApi';
+import type { Place } from '../types/place';
 
 export default function MapClickHandler({ from, to, setFrom, setTo }: {
-    from: [number, number] | null,
-    to: [number, number] | null,
-    setFrom: (c: [number, number]) => void,
-    setTo: (c: [number, number]) => void
+    from: Place | null,
+    to: Place | null,
+    setFrom: (place: Place) => void,
+    setTo: (place: Place) => void
 }) {
     useMapEvent("click", (e) => {
-        const coords: [number, number] = [e.latlng.lng, e.latlng.lat];
+        const coordinates: Coordinates = [e.latlng.lng, e.latlng.lat];
+        const place: Place = { coordinates, label: null };
         if (!from) {
-            setFrom(coords);
+            setFrom(place);
         } else if (!to) {
-            setTo(coords);
+            setTo(place);
         }
     });
 
