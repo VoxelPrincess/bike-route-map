@@ -10,7 +10,32 @@ import { deferred, jsonResponse, liveResult, partialResult, sampleRoute } from '
 vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   Pane: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  TileLayer: () => null,
+  TileLayer: ({ attribution, url, eventHandlers }: {
+    attribution: string;
+    url: string;
+    eventHandlers?: {
+      loading?: () => void;
+      tileerror?: (event: { coords: { x: number; y: number; z: number } }) => void;
+      tileload?: (event: { coords: { x: number; y: number; z: number } }) => void;
+      tileunload?: (event: { coords: { x: number; y: number; z: number } }) => void;
+      load?: () => void;
+    };
+  }) => {
+    const tileA = { coords: { x: 1, y: 2, z: 3 } };
+    const tileB = { coords: { x: 4, y: 5, z: 6 } };
+    return (
+      <>
+        <div data-testid="tile-layer" data-attribution={attribution} data-url={url} />
+        <button onClick={() => eventHandlers?.loading?.()}>Layer loading</button>
+        <button onClick={() => eventHandlers?.tileerror?.(tileA)}>Fail tile A</button>
+        <button onClick={() => eventHandlers?.tileerror?.(tileB)}>Fail tile B</button>
+        <button onClick={() => eventHandlers?.tileunload?.(tileA)}>Unload tile A</button>
+        <button onClick={() => eventHandlers?.tileload?.(tileA)}>Load tile A</button>
+        <button onClick={() => eventHandlers?.tileload?.(tileB)}>Load tile B</button>
+        <button onClick={() => eventHandlers?.load?.()}>Layer loaded</button>
+      </>
+    );
+  },
   Marker: ({ children, position }: { children: ReactNode; position: [number, number] }) => (
     <div data-testid="map-marker" data-position={JSON.stringify(position)}>{children}</div>
   ),
@@ -42,11 +67,124 @@ vi.mock('./MapClickHandler', () => ({
   ),
 }));
 
-beforeEach(() => { vi.stubEnv('VITE_USE_SAMPLE', '0'); vi.stubEnv('VITE_API_BASE', 'http://localhost:8000'); });
+beforeEach(() => {
+  vi.stubEnv('VITE_USE_SAMPLE', '0');
+  vi.stubEnv('VITE_API_BASE', 'http://localhost:8000');
+  vi.stubEnv('VITE_CARTO_API_KEY', 'test-carto-key');
+});
 const selectRoute = () => {
   fireEvent.click(screen.getByText('Select A'));
   fireEvent.click(screen.getByText('Select B'));
 };
+
+it.each([
+  ['missing', undefined],
+  ['empty', ''],
+  ['whitespace-only', '   '],
+])('does not request tiles when the CARTO key is %s', async (_label, key) => {
+  vi.stubEnv('VITE_CARTO_API_KEY', key);
+  const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  render(<Map />);
+
+  expect(screen.queryByTestId('tile-layer')).toBeNull();
+  expect((await screen.findByRole('alert')).textContent)
+    .toBe('The background map is unavailable. Map configuration is incomplete.');
+  expect(logError).toHaveBeenCalledTimes(1);
+  expect(logError).toHaveBeenCalledWith(
+    '[map] Missing VITE_CARTO_API_KEY. Configure it in the frontend build environment and rebuild.',
+  );
+  logError.mockRestore();
+});
+
+it('reports one tile failure episode, waits for recovery, and preserves route state', async () => {
+  const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const fetch = vi.fn().mockResolvedValue(jsonResponse(liveResult()));
+  vi.stubGlobal('fetch', fetch);
+  render(<Map />);
+
+  const tileLayer = screen.getByTestId('tile-layer');
+  expect(tileLayer.getAttribute('data-url')).toBe(
+    'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=test-carto-key',
+  );
+  expect(tileLayer.getAttribute('data-attribution')).toContain('OpenStreetMap');
+  expect(tileLayer.getAttribute('data-attribution')).toContain('CARTO');
+
+  selectRoute();
+  await screen.findByLabelText('Route details');
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Fail tile A'));
+  fireEvent.click(screen.getByText('Fail tile A'));
+  fireEvent.click(screen.getByText('Unload tile A'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+  fireEvent.click(screen.getByText('Fail tile B'));
+  fireEvent.click(screen.getByText('Layer loaded'));
+
+  expect((screen.getByRole('alert')).textContent)
+    .toBe('Some map tiles could not be loaded. Try reloading the page.');
+  expect(logError).toHaveBeenCalledTimes(1);
+  expect(logError).toHaveBeenCalledWith('[map] Tile loading failed', { provider: 'CARTO' });
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Load tile B'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+  fireEvent.click(screen.getByText('Layer loaded'));
+  expect(screen.queryByRole('alert')).toBeNull();
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Fail tile A'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(logError).toHaveBeenCalledTimes(2);
+  expect(screen.getByLabelText('Route details')).toBeTruthy();
+  expect(screen.getByTestId('route-line')).toBeTruthy();
+  expect(screen.getAllByTestId('map-marker')).toHaveLength(2);
+  expect(screen.getByRole('heading', { name: 'Surface breakdown' })).toBeTruthy();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  logError.mockRestore();
+});
+
+it('keeps the warning until the clean cycle finishes loading', () => {
+  const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  render(<Map />);
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Fail tile A'));
+  fireEvent.click(screen.getByText('Layer loaded'));
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Load tile A'));
+  expect(screen.getByRole('alert').textContent)
+    .toBe('Some map tiles could not be loaded. Try reloading the page.');
+  expect(logError).toHaveBeenCalledTimes(1);
+
+  fireEvent.click(screen.getByText('Load tile B'));
+  fireEvent.click(screen.getByText('Layer loaded'));
+  expect(screen.queryByRole('alert')).toBeNull();
+  logError.mockRestore();
+});
+
+it('clears the warning when an old failed tile unloads after a clean cycle', () => {
+  const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  render(<Map />);
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Fail tile A'));
+  fireEvent.click(screen.getByText('Layer loaded'));
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Load tile B'));
+  fireEvent.click(screen.getByText('Layer loaded'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+
+  fireEvent.click(screen.getByText('Unload tile A'));
+  expect(screen.queryByRole('alert')).toBeNull();
+
+  fireEvent.click(screen.getByText('Layer loading'));
+  fireEvent.click(screen.getByText('Fail tile B'));
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(logError).toHaveBeenCalledTimes(2);
+  expect(logError).toHaveBeenCalledWith('[map] Tile loading failed', { provider: 'CARTO' });
+  logError.mockRestore();
+});
 
 it('shows route metrics and the surface chart after a successful live request', async () => {
   const pending = deferred<Response>(); vi.stubGlobal('fetch', vi.fn().mockReturnValue(pending.promise));
