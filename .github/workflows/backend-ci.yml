@@ -1,0 +1,156 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend and development dependencies
+        run: >-
+          python -m pip install
+          -r backend/requirements.txt
+          -c backend/constraints-py311.txt
+          -r backend/requirements-dev.txt
+
+      - name: Typecheck backend
+        working-directory: backend
+        run: python -m mypy --config-file mypy.ini
+
+      - name: Run backend tests
+        working-directory: backend
+        run: python -m unittest discover -s tests -v
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build linux/amd64 backend image
+        run: >-
+          docker buildx build --platform linux/amd64 --load
+          -t bike-route-map-backend:ci ./backend
+
+      - name: Start container and verify root endpoint
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          container_name="bike-route-map-backend-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+          cleanup() {
+            result=$?
+            trap - EXIT
+
+            if [ "$result" -ne 0 ] && docker container inspect "$container_name" >/dev/null 2>&1; then
+              echo "Container logs after failed verification:" >&2
+              docker logs "$container_name" || echo "Could not read container logs." >&2
+            fi
+
+            if docker container inspect "$container_name" >/dev/null 2>&1; then
+              if ! docker stop --time 5 "$container_name" >/dev/null; then
+                echo "Could not stop the verification container." >&2
+                result=1
+              fi
+              if ! docker rm "$container_name" >/dev/null; then
+                echo "Could not remove the verification container." >&2
+                result=1
+              fi
+            fi
+
+            exit "$result"
+          }
+          trap cleanup EXIT
+
+          docker run --detach --name "$container_name" \
+            --publish 127.0.0.1:8001:8000 \
+            bike-route-map-backend:ci
+
+          CONTAINER_NAME="$container_name" python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          import time
+          import urllib.error
+          import urllib.request
+
+          name = os.environ["CONTAINER_NAME"]
+          deadline = time.monotonic() + 30
+          last_error = "no response"
+          ready = False
+
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  break
+
+              try:
+                  running = subprocess.run(
+                      ["docker", "inspect", "--format", "{{.State.Running}}", name],
+                      check=True,
+                      capture_output=True,
+                      text=True,
+                      timeout=min(2, remaining),
+                  ).stdout.strip()
+              except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+                  print(f"Could not inspect verification container: {type(exc).__name__}", file=sys.stderr)
+                  raise SystemExit(1)
+
+              if running != "true":
+                  print("Verification container exited before becoming ready.", file=sys.stderr)
+                  raise SystemExit(1)
+
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  break
+
+              try:
+                  with urllib.request.urlopen(
+                      "http://127.0.0.1:8001/",
+                      timeout=min(2, remaining),
+                  ) as response:
+                      body = response.read()
+                      status = response.status
+              except urllib.error.HTTPError as exc:
+                  print(f"GET / returned HTTP {exc.code}.", file=sys.stderr)
+                  raise SystemExit(1)
+              except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                  last_error = type(exc).__name__
+                  time.sleep(min(0.5, max(0, deadline - time.monotonic())))
+                  continue
+
+              if time.monotonic() >= deadline:
+                  break
+
+              if status != 200:
+                  print(f"GET / returned HTTP {status}, expected 200.", file=sys.stderr)
+                  raise SystemExit(1)
+
+              try:
+                  payload = json.loads(body)
+              except (json.JSONDecodeError, UnicodeDecodeError):
+                  print("GET / returned invalid JSON.", file=sys.stderr)
+                  raise SystemExit(1)
+
+              if payload != {"message": "Welcome to the Bike Route API"}:
+                  print("GET / returned an unexpected JSON response.", file=sys.stderr)
+                  raise SystemExit(1)
+
+              print("Container is ready: GET / returned HTTP 200 and the expected JSON.")
+              ready = True
+              break
+
+          if not ready:
+              print(f"Container did not become ready within 30 seconds ({last_error}).", file=sys.stderr)
+              raise SystemExit(1)
+          PY

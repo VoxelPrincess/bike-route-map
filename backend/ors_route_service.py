@@ -83,7 +83,7 @@ def _extract_ors_error_code(payload: Any):
 def fetch_ors_route(*, start: Tuple[float, float], end: Tuple[float, float], profile: str) -> Dict[str, Any]:
     api_key = _read_api_key()
     url = f"{ORS_BASE_URL}/directions/{profile}/geojson"
-    body = {
+    body: Dict[str, Any] = {
         "coordinates": [[start[0], start[1]], [end[0], end[1]]],
         "extra_info": ["surface"],
     }
@@ -169,10 +169,10 @@ def extract_route_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     geometry = feature.get("geometry")
     if not isinstance(geometry, dict):
         raise ORSBadResponseError("ORS route geometry is missing", code="ors_invalid_response", status_code=502)
-    if geometry.get("type") != "LineString" or not isinstance(geometry.get("coordinates"), list):
+    coordinates = geometry.get("coordinates")
+    if geometry.get("type") != "LineString" or not isinstance(coordinates, list):
         raise ORSBadResponseError("ORS route geometry is invalid", code="ors_invalid_response", status_code=502)
 
-    coordinates = geometry.get("coordinates")
     if len(coordinates) < 2:
         raise ORSBadResponseError("ORS route geometry has too few points", code="ors_invalid_response", status_code=502)
     for coord in coordinates:
@@ -286,6 +286,8 @@ def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
     distance = route["properties"]["distance_m"]
     point_count = len(route["geometry"]["coordinates"])
     normalized_summary = []
+    summary_distances: list[float] = []
+    summary_percentages: list[float] = []
     summary_codes = set()
     for row in summary:
         if not isinstance(row, dict):
@@ -300,6 +302,8 @@ def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
         if abs(percent - length / distance * 100) > 0.15 + SURFACE_COMPARISON_EPSILON:
             raise SurfaceDataError("Surface percentage does not match its distance")
         summary_codes.add(code)
+        summary_distances.append(length)
+        summary_percentages.append(percent)
         normalized_summary.append({
             "surface_code": code,
             "surface": SURFACE_LABELS.get(code, "unknown"),
@@ -307,8 +311,8 @@ def extract_surface_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
             "percent": percent,
         })
 
-    total_distance = math.fsum(row["distance_m"] for row in normalized_summary)
-    total_percent = math.fsum(row["percent"] for row in normalized_summary)
+    total_distance = math.fsum(summary_distances)
+    total_percent = math.fsum(summary_percentages)
     if abs(total_distance - distance) > max(1.0, 0.001 * distance) + SURFACE_COMPARISON_EPSILON:
         raise SurfaceDataError("Surface distances do not cover the route")
     if abs(total_percent - 100) > 0.01 * len(summary) + SURFACE_COMPARISON_EPSILON:

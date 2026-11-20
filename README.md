@@ -73,13 +73,16 @@ npm run typecheck
 # from project root
 cd backend
 
-# create and activate virtual environment
-python3 -m venv .venv
+# create and activate a Python 3.11 virtual environment
+python3.11 -m venv .venv
 source .venv/bin/activate   # Linux / macOS
 # .venv\Scripts\activate   # Windows
 
-# install dependencies
-pip install -r requirements.txt
+# install backend and development dependencies
+python -m pip install \
+  -r requirements.txt \
+  -c constraints-py311.txt \
+  -r requirements-dev.txt
 
 # set the server key in this terminal before starting live routing
 export ORS_API_KEY=your_server_key_here
