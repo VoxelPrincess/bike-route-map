@@ -1,3 +1,6 @@
 {
-  "navigationFallback": { "rewrite": "/index.html" }
+  "navigationFallback": { "rewrite": "/index.html" },
+  "globalHeaders": {
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  }
 }
