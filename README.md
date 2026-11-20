@@ -34,6 +34,16 @@ For live local routing, set `VITE_USE_SAMPLE=0` and
 The development server uses port 5173 and stops if that port is occupied,
 matching the backend's allowed local origins.
 
+Set `VITE_CARTO_API_KEY` in your untracked local `.env` to use CARTO Voyager
+tiles. CARTO keys are visible in the browser, so restrict the local key to
+`localhost` and `127.0.0.1`. Before publishing, add a separate `CARTO_API_KEY`
+repository secret and restrict its key to
+`icy-dune-080042c1e.3.azurestaticapps.net`. Configure intended Azure PR preview
+hosts separately or use a separate preview key. Enter hostnames without
+protocols, paths, or ports. Vite embeds this value at build time, so rebuild
+and redeploy after changing a key. A missing key disables the basemap and
+displays a configuration notice.
+
 Set `VITE_USE_SAMPLE=1` to display the fixed demo route without a backend.
 Demo mode is labeled on the map; metrics absent from the sample are not shown.
 Live failures never fall back to the demo. The icy-dune build explicitly keeps

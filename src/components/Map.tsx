@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, GeoJSON, Marker, Tooltip, Pane, Polyline } from 'react-leaflet';
 import * as L from 'leaflet';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isSampleMode } from '../api/routeApi';
 import type { Coordinates } from '../api/routeApi';
 import { useRoute } from '../hooks/useRoute';
@@ -51,10 +51,84 @@ function formatDuration(durationSeconds: number): string {
 const Map = () => {
   const [from, setFrom] = useState<Place | null>(null);
   const [to, setTo] = useState<Place | null>(null);
+  const cartoApiKey = import.meta.env.VITE_CARTO_API_KEY?.trim() ?? '';
+  const [hasTileFailures, setHasTileFailures] = useState(false);
+  const failedTiles = useRef(new Set<string>());
+  const failureEpisodeActive = useRef(false);
+  const layerLoading = useRef(true);
+  const cycleHadErrors = useRef(false);
+  const cleanCycleCompleted = useRef(false);
+  const missingKeyReported = useRef(false);
   const { phase, result, message, requestId, clear, retry } = useRoute(
     from?.coordinates ?? null,
     to?.coordinates ?? null,
   );
+
+  useEffect(() => {
+    if (!cartoApiKey && !missingKeyReported.current) {
+      console.error(
+        '[map] Missing VITE_CARTO_API_KEY. Configure it in the frontend build environment and rebuild.',
+      );
+      missingKeyReported.current = true;
+    }
+  }, [cartoApiKey]);
+
+  const recoverCurrentView = () => {
+    if (
+      !failureEpisodeActive.current ||
+      layerLoading.current ||
+      !cleanCycleCompleted.current ||
+      failedTiles.current.size > 0
+    ) return;
+
+    failureEpisodeActive.current = false;
+    setHasTileFailures(false);
+  };
+
+  const handleLoading = () => {
+    layerLoading.current = true;
+    cycleHadErrors.current = false;
+    cleanCycleCompleted.current = false;
+  };
+
+  const handleTileError = (event: L.TileEvent) => {
+    const tileKey = `${event.coords.z}:${event.coords.x}:${event.coords.y}`;
+    cycleHadErrors.current = true;
+    cleanCycleCompleted.current = false;
+    failedTiles.current.add(tileKey);
+
+    if (!failureEpisodeActive.current) {
+      failureEpisodeActive.current = true;
+      setHasTileFailures(true);
+      console.error('[map] Tile loading failed', { provider: 'CARTO' });
+    }
+  };
+
+  const handleTileLoad = (event: L.TileEvent) => {
+    const tileKey = `${event.coords.z}:${event.coords.x}:${event.coords.y}`;
+    failedTiles.current.delete(tileKey);
+    recoverCurrentView();
+  };
+
+  const handleTileUnload = (event: L.TileEvent) => {
+    const tileKey = `${event.coords.z}:${event.coords.x}:${event.coords.y}`;
+    failedTiles.current.delete(tileKey);
+    recoverCurrentView();
+  };
+
+  const handleLayerLoad = () => {
+    layerLoading.current = false;
+    cleanCycleCompleted.current = !cycleHadErrors.current;
+    recoverCurrentView();
+  };
+
+  const tileEventHandlers = {
+    loading: handleLoading,
+    tileerror: handleTileError,
+    tileload: handleTileLoad,
+    tileunload: handleTileUnload,
+    load: handleLayerLoad,
+  };
   const sample = isSampleMode();
   const route = result?.route;
   const metrics = route?.properties;
@@ -142,6 +216,15 @@ const Map = () => {
         {result?.status === 'partial' && (
           <div className="route-controls__notice" role="status">Surface coverage unavailable. {result.error.message}</div>
         )}
+        {!cartoApiKey ? (
+          <div className="route-controls__notice" role="alert">
+            The background map is unavailable. Map configuration is incomplete.
+          </div>
+        ) : hasTileFailures ? (
+          <div className="route-controls__notice" role="alert">
+            Some map tiles could not be loaded. Try reloading the page.
+          </div>
+        ) : null}
       </div>
       {result?.status === 'ok' && (
         <div className="surface-chart-overlay">
@@ -151,8 +234,18 @@ const Map = () => {
         </div>
       )}
       <MapContainer center={helsinkiCoords} zoom={13} scrollWheelZoom style={{ height: '100vh', width: '100%' }}>
-        <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {cartoApiKey && (
+          <>
+            {/* CARTO tiles require a browser-visible key and OSM/CARTO attribution.
+                Configuration changes require a frontend rebuild.
+                tileerror cannot detect provider warnings returned as valid images. */}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution/">CARTO</a>'
+              url={`https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(cartoApiKey)}`}
+              eventHandlers={tileEventHandlers}
+            />
+          </>
+        )}
         <MapClickHandler from={from} to={to} setFrom={setFrom} setTo={setTo} />
         <Pane name="route" style={{ zIndex: 400 }}>
           {surfaceSegments ? (
