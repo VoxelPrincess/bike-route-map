@@ -5,6 +5,7 @@ on:
     branches: [main]
   push:
     branches: [main]
+    tags: ["backend-image-*"]
 
 permissions:
   contents: read
@@ -12,8 +13,21 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.revision.outputs.commit_sha }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve tagged commit
+        id: revision
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend-image-')
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          commit_sha=$(git rev-parse --verify "${GITHUB_REF}^{commit}")
+          [[ "$commit_sha" =~ ^[0-9a-f]{40}$ ]]
+          test "$commit_sha" = "$(git rev-parse HEAD)"
+          echo "commit_sha=$commit_sha" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@v5
         with:
@@ -224,3 +238,62 @@ jobs:
               print(f"Container did not become ready within 30 seconds ({last_error}).", file=sys.stderr)
               raise SystemExit(1)
           PY
+
+      - name: Save verified image
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend-image-')
+        run: docker save -o "$RUNNER_TEMP/backend-image.tar" bike-route-map-backend:ci
+
+      - name: Upload verified image
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend-image-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-image
+          path: ${{ runner.temp }}/backend-image.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend-image-')
+    needs: backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Download verified image
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-image
+          path: ${{ runner.temp }}
+
+      - name: Load verified image
+        run: docker load -i "$RUNNER_TEMP/backend-image.tar"
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Publish image by commit SHA
+        shell: bash
+        env:
+          COMMIT_SHA: ${{ needs.backend.outputs.commit_sha }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]
+          image="ghcr.io/voxelprincess/bike-route-map-backend:$COMMIT_SHA"
+          docker tag bike-route-map-backend:ci "$image"
+          docker push "$image" | tee "$RUNNER_TEMP/backend-push.log"
+          digest=$(sed -nE 's/^.*digest: (sha256:[0-9a-f]{64}).*$/\1/p' "$RUNNER_TEMP/backend-push.log" | tail -n 1)
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          immutable="ghcr.io/voxelprincess/bike-route-map-backend@$digest"
+          echo "Image: $image"
+          echo "Commit SHA: $COMMIT_SHA"
+          echo "Digest: $digest"
+          echo "Immutable reference: $immutable"
+          {
+            printf '**Image:** `%s`\n\n' "$image"
+            printf '**Commit SHA:** `%s`\n\n' "$COMMIT_SHA"
+            printf '**Digest:** `%s`\n\n' "$digest"
+            printf '**Immutable reference:** `%s`\n' "$immutable"
+          } >> "$GITHUB_STEP_SUMMARY"
