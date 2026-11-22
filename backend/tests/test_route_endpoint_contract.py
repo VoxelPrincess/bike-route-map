@@ -1,6 +1,7 @@
 import asyncio
 import json
 import math
+import os
 import unittest
 from unittest.mock import patch
 
@@ -100,6 +101,20 @@ class RouteEndpointContractTests(unittest.TestCase):
             "surface_code": 3, "surface": "asphalt",
             "index_start": 0, "index_end": 1,
         }])
+
+    def test_route_is_independent_of_legacy_surface_setting(self):
+        responses = []
+        with patch.object(main, "fetch_ors_route", return_value=self.valid_ors_payload) as fetch:
+            for value in ("0", "1"):
+                with self.subTest(value=value), patch.dict(
+                    os.environ, {"ENABLE_LEGACY_SURFACE": value}
+                ):
+                    response, body = asyncio.run(_post_json("/api/v1/route", self.valid_request))
+                    self.assertEqual(response["status"], 200)
+                    self.assertEqual(body["status"], "ok")
+                    responses.append(body)
+        self.assertEqual(responses[0], responses[1])
+        self.assertEqual(fetch.call_count, 2)
 
     def test_partial_response_when_surface_is_missing(self):
         payload = {
