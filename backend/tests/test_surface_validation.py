@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
@@ -11,8 +12,11 @@ from test_surface_error_handling import FakeResponse
 
 async def post_surface(payload):
     """Exercise routing, request validation and HTTP serialization through ASGI."""
+    return await post_surface_raw(json.dumps(payload).encode())
+
+
+async def post_surface_raw(body):
     messages = []
-    body = json.dumps(payload).encode()
 
     async def receive():
         return {"type": "http.request", "body": body, "more_body": False}
@@ -79,6 +83,7 @@ class SurfaceValidationTests(unittest.TestCase):
             list(pool.map(access, range(8)))
             self.assertLessEqual(len(qos._CACHE), 4)
 
+    @patch.dict(os.environ, {"ENABLE_LEGACY_SURFACE": "1"})
     def test_http_validation_and_error_serialization(self):
         cases = [([], 400), ([[]], 422), ([[24.9]], 422)]
         for coordinates, expected in cases:
@@ -88,6 +93,7 @@ class SurfaceValidationTests(unittest.TestCase):
                 self.assertIn("detail", body)
                 query.assert_not_called()
 
+    @patch.dict(os.environ, {"ENABLE_LEGACY_SURFACE": "1"})
     def test_http_upstream_errors_and_success(self):
         payload = {"type": "LineString", "coordinates": [[24, 60]]}
         outcomes = [qos.OverpassTimeoutError(), qos.OverpassConnectionError(),
@@ -102,6 +108,39 @@ class SurfaceValidationTests(unittest.TestCase):
             response, body = asyncio.run(post_surface(payload))
             self.assertEqual(response["status"], 200)
             self.assertEqual(body, {"asphalt": 100.0})
+
+    def assert_disabled_surface(self):
+        bodies = [
+            json.dumps({"type": "LineString", "coordinates": [[24, 60]]}).encode(),
+            b'{"type":',
+        ]
+        for body in bodies:
+            with self.subTest(body=body), patch.object(main, "query_overpass_surface") as query:
+                response, result = asyncio.run(post_surface_raw(body))
+                self.assertEqual(response["status"], 404)
+                self.assertEqual(result, {
+                    "detail": {
+                        "code": "legacy_endpoint_disabled",
+                        "message": "This endpoint is disabled",
+                    }
+                })
+                self.assertIn(
+                    (b"access-control-allow-origin", b"http://localhost:5173"),
+                    response["headers"],
+                )
+                query.assert_not_called()
+
+    def test_endpoint_disabled_when_setting_is_absent(self):
+        with patch.dict(os.environ):
+            os.environ.pop("ENABLE_LEGACY_SURFACE", None)
+            self.assert_disabled_surface()
+
+    def test_endpoint_disabled_for_other_values(self):
+        for value in ("", "0", "false"):
+            with self.subTest(value=value), patch.dict(
+                os.environ, {"ENABLE_LEGACY_SURFACE": value}
+            ):
+                self.assert_disabled_surface()
 
     def test_no_surface_tags_is_controlled(self):
         with self.assertRaises(qos.OverpassBadResponseError) as caught:
