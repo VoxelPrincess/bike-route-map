@@ -37,9 +37,79 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Build linux/amd64 backend image
-        run: >-
-          docker buildx build --platform linux/amd64 --load
-          -t bike-route-map-backend:ci ./backend
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          paths=(
+            backend/.env
+            backend/.env.local
+            backend/.dockerignore-fixture
+            backend/.dockerignore-fixture/.env
+            backend/.dockerignore-fixture/.env.production
+          )
+          for path in "${paths[@]}"; do
+            if [[ -e "$path" || -L "$path" ]]; then
+              echo "Fixture path already exists: $path" >&2
+              exit 1
+            fi
+          done
+
+          mkdir -- backend/.dockerignore-fixture
+          created_files=()
+          cleanup() {
+            result=$?
+            trap - EXIT
+            if ((${#created_files[@]})); then
+              if ! rm -f -- "${created_files[@]}"; then
+                echo "Could not remove all fixture files." >&2
+                result=1
+              fi
+            fi
+            if ! rmdir -- backend/.dockerignore-fixture; then
+              echo "Could not remove fixture directory." >&2
+              result=1
+            fi
+            exit "$result"
+          }
+          trap cleanup EXIT
+
+          fixture_files=(
+            backend/.env
+            backend/.env.local
+            backend/.dockerignore-fixture/.env
+            backend/.dockerignore-fixture/.env.production
+          )
+          for path in "${fixture_files[@]}"; do
+            if (set -o noclobber; : > "$path"); then
+              created_files+=("$path")
+              printf '%s\n' 'synthetic-dockerignore-fixture-not-a-secret' > "$path"
+            else
+              echo "Could not safely create fixture: $path" >&2
+              exit 1
+            fi
+          done
+
+          for path in "${fixture_files[@]}"; do
+            if ! test -f "$path"; then
+              echo "Fixture is missing: $path" >&2
+              exit 1
+            fi
+          done
+          docker buildx build --platform linux/amd64 --load \
+            -t bike-route-map-backend:ci ./backend
+
+          docker run --rm --entrypoint sh bike-route-map-backend:ci -c '
+            for path in /app/.env /app/.env.local \
+              /app/.dockerignore-fixture/.env \
+              /app/.dockerignore-fixture/.env.production; do
+              if [ -e "$path" ] || [ -L "$path" ]; then
+                echo "Fixture unexpectedly present in image: $path" >&2
+                exit 1
+              fi
+              echo "Fixture absent from image: $path"
+            done
+          '
 
       - name: Start container and verify root endpoint
         shell: bash
