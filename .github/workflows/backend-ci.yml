@@ -256,6 +256,9 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/backend-image-')
     needs: backend
     runs-on: ubuntu-latest
+    concurrency:
+      group: backend-image-${{ needs.backend.outputs.commit_sha }}
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
@@ -278,10 +281,66 @@ jobs:
         shell: bash
         env:
           COMMIT_SHA: ${{ needs.backend.outputs.commit_sha }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -Eeuo pipefail
           [[ "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]
           image="ghcr.io/voxelprincess/bike-route-map-backend:$COMMIT_SHA"
+
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+
+          opener = urllib.request.build_opener(NoRedirect)
+          repository = "voxelprincess/bike-route-map-backend"
+          commit_sha = os.environ["COMMIT_SHA"]
+          credentials = f'{os.environ["GITHUB_ACTOR"]}:{os.environ["GHCR_TOKEN"]}'
+          basic = base64.b64encode(credentials.encode()).decode()
+          query = urllib.parse.urlencode({
+              "service": "ghcr.io",
+              "scope": f"repository:{repository}:pull",
+          })
+          token_request = urllib.request.Request(
+              f"https://ghcr.io/token?{query}",
+              headers={"Authorization": f"Basic {basic}"},
+          )
+          with opener.open(token_request, timeout=30) as response:
+              token = json.load(response)["token"]
+
+          manifest_request = urllib.request.Request(
+              f"https://ghcr.io/v2/{repository}/manifests/{commit_sha}",
+              method="HEAD",
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": ", ".join((
+                      "application/vnd.oci.image.index.v1+json",
+                      "application/vnd.oci.image.manifest.v1+json",
+                      "application/vnd.docker.distribution.manifest.list.v2+json",
+                      "application/vnd.docker.distribution.manifest.v2+json",
+                  )),
+              },
+          )
+          try:
+              with opener.open(manifest_request, timeout=30) as response:
+                  if response.status != 200:
+                      raise RuntimeError(f"Unexpected manifest HTTP status: {response.status}")
+                  print("Commit SHA tag already exists; refusing to overwrite it.", file=sys.stderr)
+                  raise SystemExit(1)
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+              print("Commit SHA tag does not exist; publication may proceed.")
+          PY
+
           docker tag bike-route-map-backend:ci "$image"
           docker push "$image" | tee "$RUNNER_TEMP/backend-push.log"
           digest=$(sed -nE 's/^.*digest: (sha256:[0-9a-f]{64}).*$/\1/p' "$RUNNER_TEMP/backend-push.log" | tail -n 1)
