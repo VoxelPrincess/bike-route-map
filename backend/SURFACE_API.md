@@ -1,5 +1,12 @@
 # Surface analysis
 
+`POST /analyze-surface` is a legacy endpoint retained for possible comparison
+work in #54. It is disabled by default in every environment and returns HTTP
+404 with `{"detail":{"code":"legacy_endpoint_disabled","message":"This endpoint is disabled"}}`.
+To enable it explicitly for local development, set `ENABLE_LEGACY_SURFACE=1`
+in the backend process environment before starting the server. Docker Compose
+does not currently forward this variable. Do not enable it in Azure.
+
 `POST /analyze-surface` accepts a GeoJSON-like object with `type` and
 `coordinates`. Coordinates use longitude, latitude order. The current
 implementation queries surface-tagged roads within 50 metres of the first

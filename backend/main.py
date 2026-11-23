@@ -5,12 +5,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.types import ASGIApp, Scope, Receive, Send
 from pydantic import BaseModel, Field
 from pydantic import ConfigDict
 from pydantic import field_validator, model_validator
 from typing import Annotated, List
 import logging
 import math
+import os
 
 from query_overpass_surface import (
     OverpassError,
@@ -26,6 +28,31 @@ from ors_route_service import (
 
 app = FastAPI()
 logger = logging.getLogger(__name__)
+
+class LegacySurfaceMiddleware:
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] == "http"
+            and scope["method"] == "POST"
+            and scope["path"] == "/analyze-surface"
+            and os.environ.get("ENABLE_LEGACY_SURFACE") != "1"
+        ):
+            response = JSONResponse(
+                status_code=404,
+                content={"detail": {
+                    "code": "legacy_endpoint_disabled",
+                    "message": "This endpoint is disabled",
+                }},
+            )
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(LegacySurfaceMiddleware)
 
 # Enable CORS
 app.add_middleware(
