@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import main
 from ors_route_service import ORSBadResponseError
+from route_test_support import RouteApiTestCase
 
 
 def _build_scope(path: str):
@@ -49,8 +50,9 @@ async def _post_raw(path: str, body: bytes):
     return start, json.loads(content)
 
 
-class RouteEndpointContractTests(unittest.TestCase):
+class RouteEndpointContractTests(RouteApiTestCase):
     def setUp(self):
+        super().setUp()
         self.valid_request = {
             "start": [24.941, 60.1709],
             "end": [24.962, 60.2049],
