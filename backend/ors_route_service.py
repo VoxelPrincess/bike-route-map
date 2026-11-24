@@ -69,6 +69,10 @@ def _read_api_key() -> str:
     return key
 
 
+def is_api_key_configured() -> bool:
+    return bool(os.getenv("ORS_API_KEY", "").strip())
+
+
 def _extract_ors_error_code(payload: Any):
     if not isinstance(payload, dict):
         return None
