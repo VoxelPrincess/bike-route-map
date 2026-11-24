@@ -6,6 +6,7 @@ from unittest.mock import patch
 import main
 from ors_route_service import SurfaceDataError, extract_surface_payload
 from test_route_endpoint_contract import _post_json
+from route_test_support import RouteApiTestCase
 
 
 def route_fixture():
@@ -31,8 +32,9 @@ def route_fixture():
     }
 
 
-class SurfaceNormalizationTests(unittest.TestCase):
+class SurfaceNormalizationTests(RouteApiTestCase):
     def setUp(self):
+        super().setUp()
         self.payload = route_fixture()
         self.properties = self.payload["features"][0]["properties"]
         self.surface = self.properties["extras"]["surface"]

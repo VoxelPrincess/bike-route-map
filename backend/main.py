@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from pydantic import ConfigDict
 from pydantic import field_validator, model_validator
 from typing import Annotated, List
+from contextlib import asynccontextmanager
 import logging
 import math
 import os
@@ -19,15 +20,38 @@ from query_overpass_surface import (
     query_overpass_surface,
 )
 from ors_route_service import (
+    ORSConfigError,
     ORSError,
     SurfaceDataError,
     extract_route_payload,
     extract_surface_payload,
     fetch_ors_route,
+    is_api_key_configured,
 )
+from route_guard import RouteGuard
 
-app = FastAPI()
 logger = logging.getLogger(__name__)
+# uvicorn configures this logger at INFO, so the startup line is visible.
+startup_logger = logging.getLogger("uvicorn.error")
+
+route_guard = RouteGuard()
+
+
+def _route_api_enabled() -> bool:
+    return os.environ.get("ENABLE_ROUTE_API") == "1"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    startup_logger.info(
+        "Route API startup: route_api_enabled=%s ors_key_configured=%s",
+        str(_route_api_enabled()).lower(),
+        str(is_api_key_configured()).lower(),
+    )
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 class LegacySurfaceMiddleware:
     def __init__(self, app: ASGIApp) -> None:
@@ -130,6 +154,26 @@ def _route_envelope(status: str, route, surface, error):
     }
 
 
+def _route_rejection(
+    status_code: int, code: str, message: str, retry_after=None, *, warn: bool = False
+):
+    if warn:
+        logger.warning(
+            "[route-guard] rejected code=%s status=%s retry_after=%s",
+            code, status_code, retry_after,
+        )
+    return JSONResponse(
+        status_code=status_code,
+        content=_route_envelope(
+            status="error",
+            route=None,
+            surface=None,
+            error={"code": code, "message": message},
+        ),
+        headers={"Retry-After": str(retry_after)} if retry_after is not None else None,
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     if request.url.path == "/api/v1/route":
@@ -174,6 +218,9 @@ def analyze_surface(data: LineString):
 
 @app.post("/api/v1/route")
 def route_with_surface(data: RouteRequest):
+    if not _route_api_enabled():
+        return _route_rejection(503, "routes_disabled", "Route API is disabled")
+
     if data.profile != "cycling-regular":
         return JSONResponse(
             status_code=422,
@@ -186,6 +233,23 @@ def route_with_surface(data: RouteRequest):
                     "message": "Only profile='cycling-regular' is supported",
                 },
             ),
+        )
+
+    if not is_api_key_configured():
+        config_error = ORSConfigError()
+        return _route_rejection(
+            config_error.status_code, config_error.code, str(config_error)
+        )
+
+    guard = route_guard
+    rejection = guard.try_acquire()
+    if rejection is not None:
+        return _route_rejection(
+            429,
+            rejection.code,
+            rejection.message,
+            retry_after=rejection.retry_after,
+            warn=True,
         )
 
     start = (float(data.start[0]), float(data.start[1]))
@@ -222,6 +286,8 @@ def route_with_surface(data: RouteRequest):
                 },
             ),
         )
+    finally:
+        guard.release()
 
     try:
         surface_payload = extract_surface_payload(ors_payload)
