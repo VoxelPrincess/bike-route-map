@@ -8,7 +8,9 @@ import math
 
 import requests
 
-ORS_BASE_URL = "https://api.openrouteservice.org/v2"
+# Hosted ORS API migrated to api.heigit.org; the old host was retired.
+# https://ask.openrouteservice.org/t/deprecating-api-openrouteservice-org-in-favour-of-api-heigit-org/7912/
+ORS_BASE_URL = "https://api.heigit.org/openrouteservice/v2"
 ORS_TIMEOUT_SECONDS = 8.0
 
 
