@@ -34,6 +34,22 @@ class ORSRouteServiceTests(unittest.TestCase):
             os.environ["ORS_API_KEY"] = self.old_key
 
     @patch("ors_route_service.requests.post")
+    def test_route_request_uses_hosted_ors_endpoint(self, mock_post):
+        mock_post.return_value = FakeResponse(200, {})
+
+        fetch_ors_route(
+            start=(24.9, 60.1),
+            end=(24.91, 60.11),
+            profile="cycling-regular",
+        )
+
+        mock_post.assert_called_once()
+        self.assertEqual(
+            mock_post.call_args.args[0],
+            "https://api.heigit.org/openrouteservice/v2/directions/cycling-regular/geojson",
+        )
+
+    @patch("ors_route_service.requests.post")
     def test_2009_maps_to_route_not_found(self, mock_post):
         mock_post.return_value = FakeResponse(404, {"error": {"code": 2009, "message": "No route"}})
 
